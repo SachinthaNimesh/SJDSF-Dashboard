@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { Card } from "../components/ui/card";
 import {
   Table,
   TableHeader,
@@ -7,7 +7,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/table";
+} from "../components/ui/table";
 import {
   LineChart,
   Line,

@@ -11,12 +11,21 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import dummyData from "../data/dummyData.json";
+import { useCardService } from "../api/getCard"; // Adjust path if needed
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [employees, setEmployees] = useState(dummyData.employees);
+  const { getCards } = useCardService();
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getCards()
+      .then((data) => setEmployees(data))
+      .catch(() => setEmployees([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Sort employees by mood priority: sad > neutral > happy
   const sortedEmployees = [...employees].sort((a, b) => {
@@ -26,11 +35,61 @@ const Dashboard = () => {
 
   // Calculate statistics
   const totalEmployees = employees.length;
-  const checkedInEmployees = employees.filter(
-    (emp) => !emp.check_out_date_time
-  ).length;
   const happyEmployees = employees.filter(
     (emp) => emp.emotion === "happy"
+  ).length;
+
+  // Helper to determine checked in/out status for today
+  function getStatusForToday(employee) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const checkedInRaw = employee.check_in_date_time;
+    const checkedOutRaw = employee.check_out_date_time;
+
+    // Special "zero" timestamp string (can appear as with or without T, so check both)
+    const ZERO_TIMESTAMP = "0001-01-01";
+    const isZeroTimestamp = (val) =>
+      typeof val === "string" && val.startsWith(ZERO_TIMESTAMP);
+
+    // Parse check-in/check-out dates
+    let checkedInDate = checkedInRaw ? new Date(checkedInRaw) : null;
+    let checkedOutDate = checkedOutRaw ? new Date(checkedOutRaw) : null;
+
+    // Check if check-in/check-out is today
+    const isCheckedInToday =
+      checkedInDate && checkedInDate.toISOString().slice(0, 10) === todayStr;
+    const isCheckedOutToday =
+      checkedOutDate && checkedOutDate.toISOString().slice(0, 10) === todayStr;
+
+    // 1. If there is a checked out record for today and it is not the zero timestamp, show "Out"
+    if (checkedOutRaw && !isZeroTimestamp(checkedOutRaw) && isCheckedOutToday) {
+      return {
+        status: "Out",
+        statusColor: "bg-red-100 text-red-700",
+      };
+    }
+
+    // 2. If checked out is zero timestamp or not recorded, and there is a valid checked in for today, mark "In"
+    if (
+      isCheckedInToday &&
+      (!checkedOutRaw || isZeroTimestamp(checkedOutRaw))
+    ) {
+      return {
+        status: "In",
+        statusColor: "bg-green-100 text-green-700",
+      };
+    }
+
+    // 3. Otherwise, mark "Out"
+    return {
+      status: "Out",
+      statusColor: "bg-red-100 text-red-700",
+    };
+  }
+
+  // Calculate checked in employees using the same logic as getStatusForToday
+  const checkedInEmployees = employees.filter(
+    (emp) => getStatusForToday(emp).status === "In"
   ).length;
 
   if (loading) {
@@ -98,32 +157,38 @@ const Dashboard = () => {
 
           {/* Employee Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedEmployees.map((employee) => (
-              <EmployeeCard
-                key={employee.student_id}
-                employee={{
-                  id: employee.student_id,
-                  name: `${employee.first_name} ${employee.last_name}`,
-                  employer: employee.employer_name,
-                  status: employee.check_out_date_time
-                    ? "Checked Out"
-                    : "Checked In",
-                  statusColor: employee.check_out_date_time
-                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                    : "bg-gradient-to-r from-green-500 to-green-600 text-white",
-                  workingHours: `${new Date(
-                    employee.check_in_date_time
-                  ).toLocaleTimeString()} - ${
-                    employee.check_out_date_time
-                      ? new Date(
-                          employee.check_out_date_time
-                        ).toLocaleTimeString()
-                      : "N/A"
-                  }`,
-                  mood: employee.emotion,
-                }}
-              />
-            ))}
+            {sortedEmployees.map((employee) => {
+              const { status, statusColor } = getStatusForToday(employee);
+              return (
+                <EmployeeCard
+                  key={employee.student_id}
+                  employee={{
+                    id: employee.student_id,
+                    name: `${employee.first_name} ${employee.last_name}`,
+                    employer: employee.employer_name,
+                    status,
+                    statusColor,
+                    workingHours: `${
+                      employee.check_in_date_time
+                        ? new Date(
+                            employee.check_in_date_time
+                          ).toLocaleTimeString()
+                        : "N/A"
+                    } - ${
+                      employee.check_out_date_time &&
+                      !employee.check_out_date_time.startsWith(
+                        "0001-01-01T05:53:28"
+                      )
+                        ? new Date(
+                            employee.check_out_date_time
+                          ).toLocaleTimeString()
+                        : "N/A"
+                    }`,
+                    mood: employee.emotion,
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

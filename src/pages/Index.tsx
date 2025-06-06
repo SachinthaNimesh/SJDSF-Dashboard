@@ -93,8 +93,9 @@ const Index = () => {
                 About
               </h3>
               <p className="mt-4 text-gray-600">
-                SJDSF Dashboard provides comprehensive employee management
-                solutions for modern businesses.
+                The Shiranee Joseph de Saram Foundation is a New Jersey
+                501(c)(3) non-profit organization established to support those
+                with special needs in Sri Lanka.
               </p>
             </div>
             <div>
@@ -127,14 +128,15 @@ const Index = () => {
                 Contact
               </h3>
               <ul className="mt-4 space-y-2">
-                <li className="text-gray-600">Email: support@sjdsf.com</li>
-                <li className="text-gray-600">Phone: +1 (555) 123-4567</li>
+                <li className="text-gray-600">Email: contact@sjdsf.org</li>
+                <li className="text-gray-600">Phone: +1 6179597583</li>
               </ul>
             </div>
           </div>
           <div className="mt-8 pt-4 border-t border-gray-200">
             <p className="text-center text-gray-500">
-              © {new Date().getFullYear()} SJDSF Dashboard. All rights reserved.
+              © {new Date().getFullYear()} SJDSF | The Shiranee Joseph de Saram
+              Foundation
             </p>
           </div>
         </div>
