@@ -19,100 +19,115 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  getEmployeeSummary,
-  EmployeeSummary,
-  Attendance,
+  getTraineeProfile,
+  TraineeProfileResponse,
+  StudentInfo,
   Mood,
-} from "../api/getSummary";
-
-// Mock data for incident reports
-const incidentReports = [
-  {
-    date: "2025-03-06",
-    time: "2:40 PM",
-    type: "Minor Incident",
-    issue: "Had difficulty understanding new task instructions",
-    resolution:
-      "Support staff provided additional guidance and simplified instructions",
-  },
-  {
-    date: "2025-02-22",
-    time: "10:45 AM",
-    type: "Minor Incident",
-    issue: "Had difficulty understanding new task instructions",
-    resolution:
-      "Support staff provided additional guidance and simplified instructions",
-  },
-  {
-    date: "2025-02-22",
-    time: "10:45 AM",
-    type: "Minor Incident",
-    issue: "Had difficulty understanding new task instructions",
-    resolution:
-      "Support staff provided additional guidance and simplified instructions",
-  },
-];
-
-// Mock data for feedbacks
-const feedbacks = [
-  {
-    date: "2025-02-22",
-    time: "10:45 AM",
-    type: "Feedback",
-    content:
-      "Successfully arranged a shelf without support of other employees.",
-  },
-];
+} from "../api/getEmployeeSummary";
 
 const StudentDetail = () => {
-  const { id } = useParams(); // Get the id from the URL
-  const [summary, setSummary] = useState<EmployeeSummary | null>(null);
+  const { id } = useParams();
+  const [profile, setProfile] = useState<TraineeProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch summary data
+  // Fetch profile data
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    getEmployeeSummary(Number(id))
-      .then((data) => setSummary(data))
+    getTraineeProfile(Number(id))
+      .then((data) => setProfile(data))
       .finally(() => setLoading(false));
   }, [id]);
 
   // Prepare attendance data for table
   const attendanceData =
-    summary?.attendances?.map((a) => ({
-      date: a.check_in_date_time?.slice(0, 10),
-      checkIn: a.check_in_date_time
-        ? new Date(a.check_in_date_time).toLocaleTimeString()
-        : "-",
-      checkOut:
-        a.check_out_date_time && !a.check_out_date_time.startsWith("0001-01-01")
-          ? new Date(a.check_out_date_time).toLocaleTimeString()
-          : "-",
-    })) || [];
+    profile?.recent_attendance
+      ?.map((a) => {
+        const checkInDate = a.actual_check_in
+          ? new Date(a.actual_check_in)
+          : null;
+        const checkOutDate =
+          a.actual_check_out && !a.actual_check_out.startsWith("0001-01-01")
+            ? new Date(a.actual_check_out)
+            : null;
+        return {
+          date: checkInDate
+            ? `${String(checkInDate.getDate()).padStart(2, "0")}-${String(
+                checkInDate.getMonth() + 1
+              ).padStart(2, "0")}`
+            : "-",
+          checkIn: checkInDate
+            ? `${String(checkInDate.getHours()).padStart(2, "0")}:${String(
+                checkInDate.getMinutes()
+              ).padStart(2, "0")}`
+            : "-",
+          checkOut: checkOutDate
+            ? `${String(checkOutDate.getHours()).padStart(2, "0")}:${String(
+                checkOutDate.getMinutes()
+              ).padStart(2, "0")}`
+            : "-",
+          actual_check_in: a.actual_check_in,
+        };
+      })
+      // Sort by actual_check_in ascending so earliest is first, latest is last
+      .sort((a, b) =>
+        a.actual_check_in > b.actual_check_in
+          ? 1
+          : a.actual_check_in < b.actual_check_in
+          ? -1
+          : 0
+      )
+      .map(({ actual_check_in, ...rest }) => rest) || [];
 
   // Prepare emotional trend data for chart
   const emotionMap = { sad: 0, neutral: 1, happy: 2 };
   const emotionalData =
-    summary?.moods?.map((m) => ({
-      date: m.recorded_at?.slice(0, 10),
-      value: emotionMap[m.emotion] ?? 1,
-    })) || [];
+    profile?.recent_moods
+      ?.map((m: Mood) => ({
+        date: m.recorded_at?.slice(0, 10),
+        value: emotionMap[m.emotion] ?? 1,
+        recorded_at: m.recorded_at,
+      }))
+      // Sort by recorded_at ascending so latest is last
+      .sort((a, b) =>
+        a.recorded_at > b.recorded_at
+          ? 1
+          : a.recorded_at < b.recorded_at
+          ? -1
+          : 0
+      )
+      .map(({ recorded_at, ...rest }) => rest) || [];
 
-  // Mock incidentReports and feedbacks (since not in API)
+  // No incidentReports from API
   const incidentReports: any[] = [];
-  const feedbacks: any[] = [];
 
-  // Mock employee info (replace with real if available)
+  // Student info from API
+  const studentInfo: StudentInfo | undefined = profile?.student_info;
+
   const employee = {
     id,
-    name: "Student",
+    name: studentInfo
+      ? `${studentInfo.first_name} ${studentInfo.last_name}`
+      : "Student",
     employer: "",
     photoUrl: "",
-    guardian_contact_no: "",
-    employer_contact_no: "",
-    ...summary,
+    guardian_contact_no: studentInfo?.contact_number_guardian || "",
+    employer_contact_no: studentInfo?.contact_number || "",
+    ...studentInfo,
   };
+
+  // Set feedbacks to remarks from student info
+  const feedbacks =
+    studentInfo?.remarks && studentInfo.remarks.trim() !== ""
+      ? [
+          {
+            date: "",
+            time: "",
+            type: "Remark",
+            content: studentInfo.remarks,
+          },
+        ]
+      : [];
 
   if (loading) {
     return (
@@ -138,11 +153,6 @@ const StudentDetail = () => {
                   placeholder="Search trainee..."
                   className="px-4 py-2 rounded-full border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition text-sm bg-white placeholder-gray-400"
                 />
-                <select className="px-4 py-2 rounded-full border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition text-sm bg-white">
-                  <option>Week</option>
-                  <option>Month</option>
-                  <option>Year</option>
-                </select>
               </div>
             </div>
 

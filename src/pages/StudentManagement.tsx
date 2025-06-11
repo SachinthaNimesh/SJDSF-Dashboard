@@ -26,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { NotificationsPopover } from "@/components/NotificationsPopover";
 import {
   getManagementTable,
   StudentEmployerSupervisor,

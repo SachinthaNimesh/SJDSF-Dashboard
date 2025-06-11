@@ -94,103 +94,110 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh] bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex">
-      {/* Removed Sidebar */}
-      {/* Main Content */}
-      <div className="flex-1 p-8">
-        <div className="space-y-6">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-6 shadow-sm border border-blue-100/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Employees
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 mt-1">
-                    {totalEmployees}
-                  </p>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
+      <div className="flex flex-1">
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                Employee Dashboard
+              </h2>
+              {/* Optionally add search/filter here */}
+            </div>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-6 shadow-sm border border-blue-100/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Employees
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-1">
+                      {totalEmployees}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                  <Users className="w-6 h-6 text-white" />
+              </div>
+              <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-sm border border-green-100/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Currently Checked In
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-1">
+                      {checkedInEmployees}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-white to-yellow-50 rounded-xl p-6 shadow-sm border border-yellow-100/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Happy Employees
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-1">
+                      {happyEmployees}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg">
+                    <Smile className="w-6 h-6 text-white" />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-sm border border-green-100/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Currently Checked In
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 mt-1">
-                    {checkedInEmployees}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-white to-yellow-50 rounded-xl p-6 shadow-sm border border-yellow-100/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Happy Employees
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 mt-1">
-                    {happyEmployees}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg">
-                  <Building2 className="w-6 h-6 text-white" />
-                </div>
-              </div>
+            {/* Employee Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedEmployees.map((employee) => {
+                const { status, statusColor } = getStatusForToday(employee);
+                return (
+                  <EmployeeCard
+                    key={employee.student_id}
+                    employee={{
+                      id: employee.student_id,
+                      name: `${employee.first_name} ${employee.last_name}`,
+                      employer: employee.employer_name,
+                      status,
+                      statusColor,
+                      workingHours: `${
+                        employee.check_in_date_time
+                          ? new Date(
+                              employee.check_in_date_time
+                            ).toLocaleTimeString()
+                          : "N/A"
+                      } - ${
+                        employee.check_out_date_time &&
+                        !employee.check_out_date_time.startsWith(
+                          "0001-01-01T05:53:28"
+                        )
+                          ? new Date(
+                              employee.check_out_date_time
+                            ).toLocaleTimeString()
+                          : "N/A"
+                      }`,
+                      mood: employee.emotion,
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
-
-          {/* Employee Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedEmployees.map((employee) => {
-              const { status, statusColor } = getStatusForToday(employee);
-              return (
-                <EmployeeCard
-                  key={employee.student_id}
-                  employee={{
-                    id: employee.student_id,
-                    name: `${employee.first_name} ${employee.last_name}`,
-                    employer: employee.employer_name,
-                    status,
-                    statusColor,
-                    workingHours: `${
-                      employee.check_in_date_time
-                        ? new Date(
-                            employee.check_in_date_time
-                          ).toLocaleTimeString()
-                        : "N/A"
-                    } - ${
-                      employee.check_out_date_time &&
-                      !employee.check_out_date_time.startsWith(
-                        "0001-01-01T05:53:28"
-                      )
-                        ? new Date(
-                            employee.check_out_date_time
-                          ).toLocaleTimeString()
-                        : "N/A"
-                    }`,
-                    mood: employee.emotion,
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
+        </main>
       </div>
     </div>
   );
@@ -219,7 +226,7 @@ function EmployeeCard({ employee }) {
 
   return (
     <div
-      className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="flex justify-between items-start">
