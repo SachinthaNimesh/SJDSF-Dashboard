@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Edit, UserCog, Upload, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
+import {
+  getManagementTable,
+  StudentEmployerSupervisor,
+} from "@/api/getManagement";
+
+const genders = ["Male", "Female", "Other"];
 
 const StudentManagement = () => {
   const navigate = useNavigate();
@@ -51,56 +57,52 @@ const StudentManagement = () => {
   const [trainer, setTrainer] = useState("");
   const [remarks, setRemarks] = useState("");
 
-  // Sample student data
-  const students = [
-    {
-      id: 1,
-      name: "Sampath Perera",
-      employer: "ABC Textiles Ltd",
-      trainer: "Dayan De Silva",
-    },
-    {
-      id: 2,
-      name: "Malini Silva",
-      employer: "XYZ Foods",
-      trainer: "Mohammed Aslam",
-    },
-    {
-      id: 3,
-      name: "Rajiv Kumar",
-      employer: "Cafe Ceylon Ltd",
-      trainer: "Ruwan Fernando",
-    },
-    {
-      id: 4,
-      name: "Asanka Bandara",
-      employer: "Yuki Ice Cream",
-      trainer: "Nalaka Rathnayaka",
-    },
-    {
-      id: 5,
-      name: "John Doe",
-      employer: "Green Gardens",
-      trainer: "Nimali Sirisena",
-    },
-  ];
+  // State for API data
+  const [managementData, setManagementData] = useState<
+    StudentEmployerSupervisor[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample data for dropdowns
-  const employers = [
-    "ABC Textiles Ltd",
-    "XYZ Foods",
-    "Cafe Ceylon Ltd",
-    "Yuki Ice Cream",
-    "Green Gardens",
-  ];
-  const trainers = [
-    "Dayan De Silva",
-    "Mohammed Aslam",
-    "Ruwan Fernando",
-    "Nalaka Rathnayaka",
-    "Nimali Sirisena",
-  ];
-  const genders = ["Male", "Female", "Other"];
+  useEffect(() => {
+    setLoading(true);
+    getManagementTable()
+      .then((data) => setManagementData(Array.isArray(data) ? data : []))
+      .catch(() => setManagementData([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Extract unique employers and supervisors for dropdowns
+  const employers = Array.from(
+    new Set(
+      managementData
+        .map((item) =>
+          item.employer_name
+            ? JSON.stringify({
+                name: item.employer_name,
+                contact: item.employer_contact_number || "",
+              })
+            : null
+        )
+        .filter(Boolean)
+    )
+  ).map((str) => JSON.parse(str));
+
+  const supervisors = Array.from(
+    new Set(
+      managementData
+        .map((item) =>
+          item.supervisor_first_name || item.supervisor_last_name
+            ? JSON.stringify({
+                name: `${item.supervisor_first_name || ""} ${
+                  item.supervisor_last_name || ""
+                }`.trim(),
+                contact: item.supervisor_contact_number || "",
+              })
+            : null
+        )
+        .filter(Boolean)
+    )
+  ).map((str) => JSON.parse(str));
 
   const handleViewStudent = (id) => {
     navigate(`/student/${id}`);
@@ -158,6 +160,19 @@ const StudentManagement = () => {
     setRemarks("");
   };
 
+  // Filter and sort managementData by search query and student_id
+  const filteredSortedManagementData = [...managementData]
+    .filter((item) => {
+      const fullName =
+        `${item.student_first_name} ${item.student_last_name}`.toLowerCase();
+      const idStr = String(item.student_id);
+      return (
+        fullName.includes(searchQuery.toLowerCase()) ||
+        idStr.includes(searchQuery.trim())
+      );
+    })
+    .sort((a, b) => a.student_id - b.student_id);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
       <div className="flex flex-1">
@@ -199,7 +214,9 @@ const StudentManagement = () => {
                 <p className="text-sm font-medium opacity-90">
                   Total Employees
                 </p>
-                <p className="text-2xl font-bold mt-1">{students.length}</p>
+                <p className="text-2xl font-bold mt-1">
+                  {managementData.length}
+                </p>
               </div>
             </div>
 
@@ -218,7 +235,13 @@ const StudentManagement = () => {
                       EMPLOYER
                     </TableHead>
                     <TableHead className="font-semibold text-gray-700">
-                      TRAINER
+                      EMPLOYER CONTACT
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      SUPERVISOR
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      SUPERVISOR CONTACT
                     </TableHead>
                     <TableHead className="w-24 font-semibold text-gray-700">
                       ACTION
@@ -226,42 +249,64 @@ const StudentManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map((student) => (
-                    <TableRow
-                      key={student.id}
-                      className="hover:bg-blue-50/50 transition-colors duration-200"
-                    >
-                      <TableCell className="font-medium text-gray-900">
-                        {student.id}
-                      </TableCell>
-                      <TableCell className="text-gray-700">
-                        {student.name}
-                      </TableCell>
-                      <TableCell className="text-gray-700">
-                        {student.employer}
-                      </TableCell>
-                      <TableCell className="text-gray-700">
-                        {student.trainer}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleViewStudent(student.id)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                            title="Edit student"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
-                          <button
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                            title="Manage student"
-                          >
-                            <UserCog className="h-5 w-5" />
-                          </button>
-                        </div>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center">
+                        Loading...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : filteredSortedManagementData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center">
+                        No employees found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredSortedManagementData.map((item) => (
+                      <TableRow
+                        key={item.student_id}
+                        className="hover:bg-blue-50/50 transition-colors duration-200"
+                      >
+                        <TableCell className="font-medium text-gray-900">
+                          {item.student_id}
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {item.student_first_name} {item.student_last_name}
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {item.employer_name || "-"}
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {item.employer_contact_number || "-"}
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {(item.supervisor_first_name || "-") +
+                            " " +
+                            (item.supervisor_last_name || "")}
+                        </TableCell>
+                        <TableCell className="text-gray-700">
+                          {item.supervisor_contact_number || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleViewStudent(item.student_id)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                              title="Edit student"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
+                            <button
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                              title="Manage student"
+                            >
+                              <UserCog className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -516,8 +561,13 @@ const StudentManagement = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {employers.map((emp) => (
-                        <SelectItem key={emp} value={emp}>
-                          {emp}
+                        <SelectItem key={emp.name} value={emp.name}>
+                          {emp.name}
+                          {emp.contact && (
+                            <span className="ml-2 text-xs text-gray-400">
+                              ({emp.contact})
+                            </span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -528,16 +578,21 @@ const StudentManagement = () => {
                     htmlFor="trainer"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Trainer
+                    Supervisor
                   </Label>
                   <Select value={trainer} onValueChange={setTrainer}>
                     <SelectTrigger id="trainer" className="mt-1.5 bg-white/80">
-                      <SelectValue placeholder="Select trainer" />
+                      <SelectValue placeholder="Select supervisor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {trainers.map((tr) => (
-                        <SelectItem key={tr} value={tr}>
-                          {tr}
+                      {supervisors.map((sup) => (
+                        <SelectItem key={sup.name} value={sup.name}>
+                          {sup.name}
+                          {sup.contact && (
+                            <span className="ml-2 text-xs text-gray-400">
+                              ({sup.contact})
+                            </span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>

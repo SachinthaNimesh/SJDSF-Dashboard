@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
 import {
   Table,
@@ -17,24 +18,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-// Mock data for the attendance log
-const attendanceData = [
-  { date: "2025-02-20", checkIn: "8:00 AM", checkOut: "5:00 PM" },
-  { date: "2025-02-21", checkIn: "8:15 AM", checkOut: "5:15 PM" },
-  { date: "2025-02-22", checkIn: "8:05 AM", checkOut: "5:20 PM" },
-  { date: "2025-02-23", checkIn: "7:50 AM", checkOut: "5:00 PM" },
-  { date: "2025-02-24", checkIn: "8:10 AM", checkOut: "5:15 PM" },
-];
-
-// Mock data for emotional trend
-const emotionalData = [
-  { date: "2025-02-20", value: 0 },
-  { date: "2025-02-21", value: 1 },
-  { date: "2025-02-22", value: 2 },
-  { date: "2025-02-23", value: 2 },
-  { date: "2025-02-24", value: 1 },
-];
+import {
+  getEmployeeSummary,
+  EmployeeSummary,
+  Attendance,
+  Mood,
+} from "../api/getSummary";
 
 // Mock data for incident reports
 const incidentReports = [
@@ -77,16 +66,61 @@ const feedbacks = [
 
 const StudentDetail = () => {
   const { id } = useParams(); // Get the id from the URL
+  const [summary, setSummary] = useState<EmployeeSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock employee data (would normally come from an API)
+  // Fetch summary data
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    getEmployeeSummary(Number(id))
+      .then((data) => setSummary(data))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // Prepare attendance data for table
+  const attendanceData =
+    summary?.attendances?.map((a) => ({
+      date: a.check_in_date_time?.slice(0, 10),
+      checkIn: a.check_in_date_time
+        ? new Date(a.check_in_date_time).toLocaleTimeString()
+        : "-",
+      checkOut:
+        a.check_out_date_time && !a.check_out_date_time.startsWith("0001-01-01")
+          ? new Date(a.check_out_date_time).toLocaleTimeString()
+          : "-",
+    })) || [];
+
+  // Prepare emotional trend data for chart
+  const emotionMap = { sad: 0, neutral: 1, happy: 2 };
+  const emotionalData =
+    summary?.moods?.map((m) => ({
+      date: m.recorded_at?.slice(0, 10),
+      value: emotionMap[m.emotion] ?? 1,
+    })) || [];
+
+  // Mock incidentReports and feedbacks (since not in API)
+  const incidentReports: any[] = [];
+  const feedbacks: any[] = [];
+
+  // Mock employee info (replace with real if available)
   const employee = {
-    id, // Use the id from the URL
-    name: "Sampath Perera",
-    employer: "ABC Textiles Ltd",
-    photoUrl: "/user.jpg",
-    guardian_contact_no: "0771234567",
-    employer_contact_no: "0777654321",
+    id,
+    name: "Student",
+    employer: "",
+    photoUrl: "",
+    guardian_contact_no: "",
+    employer_contact_no: "",
+    ...summary,
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
@@ -163,7 +197,7 @@ const StudentDetail = () => {
                         key={index}
                         className="hover:bg-blue-50/60 transition"
                       >
-                        <TableCell>{record.date.slice(5)}</TableCell>
+                        <TableCell>{record.date}</TableCell>
                         <TableCell>{record.checkIn}</TableCell>
                         <TableCell>{record.checkOut}</TableCell>
                       </TableRow>
@@ -178,6 +212,11 @@ const StudentDetail = () => {
                   Incident Reports
                 </h3>
                 <div className="space-y-4">
+                  {incidentReports.length === 0 && (
+                    <div className="text-gray-400 text-sm">
+                      No incidents reported.
+                    </div>
+                  )}
                   {incidentReports.map((incident, index) => (
                     <div
                       key={index}
@@ -211,7 +250,7 @@ const StudentDetail = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
                         dataKey="date"
-                        tickFormatter={(value) => value.slice(5)}
+                        tickFormatter={(value) => value?.slice(5)}
                         className="text-xs text-gray-400"
                       />
                       <YAxis
@@ -250,6 +289,11 @@ const StudentDetail = () => {
                   Feedbacks
                 </h3>
                 <div className="space-y-4">
+                  {feedbacks.length === 0 && (
+                    <div className="text-gray-400 text-sm">
+                      No feedbacks yet.
+                    </div>
+                  )}
                   {feedbacks.map((feedback, index) => (
                     <div
                       key={index}

@@ -15,7 +15,7 @@ function Sidebar({ active = "dashboard" }) {
     <nav className="flex flex-col gap-2 py-8 px-4">
       <Link
         to="/dashboard"
-        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium ${
+        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium text-sm ${
           location.pathname === "/dashboard"
             ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
             : "text-gray-600 hover:bg-gray-100"
@@ -26,14 +26,14 @@ function Sidebar({ active = "dashboard" }) {
       </Link>
       <Link
         to="/student-management"
-        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium ${
+        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium text-sm ${
           location.pathname === "/student-management"
             ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
             : "text-gray-600 hover:bg-gray-100"
         }`}
       >
         <GraduationCap className="w-5 h-5" />
-        Student Management
+        Employee Management
       </Link>
     </nav>
   );
