@@ -1,15 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronRight,
-  Clock,
-  Building2,
-  Users,
-  Smile,
-  Frown,
-  Meh,
-  User,
-  GraduationCap,
-} from "lucide-react";
+import { Clock, Users, Smile, Frown, Meh } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCardService } from "../api/getCard"; // Adjust path if needed
 

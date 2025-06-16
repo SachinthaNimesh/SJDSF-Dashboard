@@ -2,7 +2,8 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
-import { User, GraduationCap } from "lucide-react";
+import { User, GraduationCap, LogOut } from "lucide-react";
+import { useMsal } from "@azure/msal-react";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -41,6 +42,12 @@ function Sidebar({ active = "dashboard" }) {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
+  const { accounts, instance } = useMsal();
+  const user = accounts[0];
+
+  const handleLogout = () => {
+    instance.logoutPopup();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
@@ -57,14 +64,29 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <Sidebar />
           {/* User Profile at the bottom */}
           <div className="mt-auto p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <span className="text-sm font-medium text-white">U</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {user?.name?.[0]?.toUpperCase() || "U"}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.username || "user@example.com"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">User Name</p>
-                <p className="text-xs text-gray-500">user@example.com</p>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

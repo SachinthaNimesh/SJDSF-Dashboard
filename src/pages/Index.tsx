@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -8,21 +8,80 @@ import {
   LogIn,
   Globe,
   Facebook,
+  BarChart3,
+  Shield,
+  Mail,
+  Phone,
 } from "lucide-react";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig"; // Adjust path if needed
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { instance, accounts, inProgress } = useMsal();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (accounts.length > 0) {
+      navigate("/dashboard");
+    }
+  }, [accounts, navigate]);
+
+  const handleLogin = () => {
+    try {
+      setIsLoading(true);
+      instance.loginRedirect(loginRequest);
+    } catch (error) {
+      console.error("Login failed:", error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    instance.logoutRedirect();
+  };
+
+  // Show loading state while authentication is in progress
+  if (inProgress !== "none") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Signing in...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex flex-col">
       {/* Header with Sign In */}
       <header className="w-full py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-end">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
-          >
-            <LogIn className="mr-2 w-4 h-4" />
-            Sign In
-          </Link>
+          {accounts.length > 0 ? (
+            <div className="flex items-center gap-4">
+              <span className="text-gray-700">
+                Welcome {accounts[0].username}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white font-semibold text-lg shadow-lg hover:from-blue-800 hover:to-purple-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <LogIn className="mr-2 w-5 h-5" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white font-bold text-lg shadow-xl hover:from-blue-800 hover:to-purple-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <LogIn className="mr-3 w-6 h-6" />
+              {isLoading ? "Signing in..." : "Sign In"}
+            </button>
+          )}
         </div>
       </header>
 
@@ -39,10 +98,10 @@ const Index = () => {
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Welcome
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Streamline your employee management with our comprehensive
-              dashboard solution.
-            </p>
+            {/* <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              A comprehensive platform for managing and tracking employee
+              information and performance.
+            </p> */}
           </div>
 
           {/* Features Grid */}
@@ -52,10 +111,11 @@ const Index = () => {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Employee Tracking
+                Employee Management
               </h3>
               <p className="text-gray-600">
-                Monitor employee attendance and working hours in real-time.
+                Easily manage and track employee information, performance, and
+                development.
               </p>
             </div>
             <div className="bg-gradient-to-br from-white to-green-50 p-6 rounded-xl shadow-sm border border-green-100/50 hover:shadow-md transition-shadow">

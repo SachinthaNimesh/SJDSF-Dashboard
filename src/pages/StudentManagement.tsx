@@ -30,6 +30,8 @@ import {
   getManagementTable,
   StudentEmployerSupervisor,
 } from "@/api/getManagement";
+import { useStudentService } from "@/api/crudEmployee";
+import { useSupervisorEmployerService } from "@/api/getSupervisorEmployerId";
 
 const genders = ["Male", "Female", "Other"];
 
@@ -38,29 +40,42 @@ const StudentManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Form states
-  const [studentId, setStudentId] = useState("");
+  // Form states (updated)
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dob, setDob] = useState(""); // YYYY-MM-DD
   const [gender, setGender] = useState("");
-  const [homeAddressLine1, setHomeAddressLine1] = useState("");
-  const [homeAddressLine2, setHomeAddressLine2] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
   const [city, setCity] = useState("");
-  const [workplaceAddressLine1, setWorkplaceAddressLine1] = useState("");
-  const [workplaceAddressLine2, setWorkplaceAddressLine2] = useState("");
-  const [workplaceCity, setWorkplaceCity] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [guardianContactNumber, setGuardianContactNumber] = useState("");
-  const [employer, setEmployer] = useState("");
-  const [trainer, setTrainer] = useState("");
+  const [contactNumberGuardian, setContactNumberGuardian] = useState("");
+  const [supervisorId, setSupervisorId] = useState<string | undefined>(
+    undefined
+  );
   const [remarks, setRemarks] = useState("");
+  const [homeLong, setHomeLong] = useState("");
+  const [homeLat, setHomeLat] = useState("");
+  const [employerId, setEmployerId] = useState<string | undefined>(undefined);
+  const [checkInTime, setCheckInTime] = useState(""); // HH:MM
+  const [checkOutTime, setCheckOutTime] = useState(""); // HH:MM
 
   // State for API data
   const [managementData, setManagementData] = useState<
     StudentEmployerSupervisor[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const { createStudent } = useStudentService();
+
+  // Add state for dropdown data
+  const [employerOptions, setEmployerOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [supervisorOptions, setSupervisorOptions] = useState<
+    { supervisor_id: number; first_name: string; last_name: string }[]
+  >([]);
+  const { getAllEmployerIDsAndNames, getAllSupervisorIDsAndNames } =
+    useSupervisorEmployerService();
 
   useEffect(() => {
     setLoading(true);
@@ -68,40 +83,16 @@ const StudentManagement = () => {
       .then((data) => setManagementData(Array.isArray(data) ? data : []))
       .catch(() => setManagementData([]))
       .finally(() => setLoading(false));
+
+    // Fetch employer and supervisor options for dropdowns
+    getAllEmployerIDsAndNames()
+      .then(setEmployerOptions)
+      .catch(() => setEmployerOptions([]));
+    getAllSupervisorIDsAndNames()
+      .then(setSupervisorOptions)
+      .catch(() => setSupervisorOptions([]));
   }, []);
-
-  // Extract unique employers and supervisors for dropdowns
-  const employers = Array.from(
-    new Set(
-      managementData
-        .map((item) =>
-          item.employer_name
-            ? JSON.stringify({
-                name: item.employer_name,
-                contact: item.employer_contact_number || "",
-              })
-            : null
-        )
-        .filter(Boolean)
-    )
-  ).map((str) => JSON.parse(str));
-
-  const supervisors = Array.from(
-    new Set(
-      managementData
-        .map((item) =>
-          item.supervisor_first_name || item.supervisor_last_name
-            ? JSON.stringify({
-                name: `${item.supervisor_first_name || ""} ${
-                  item.supervisor_last_name || ""
-                }`.trim(),
-                contact: item.supervisor_contact_number || "",
-              })
-            : null
-        )
-        .filter(Boolean)
-    )
-  ).map((str) => JSON.parse(str));
+  // ...existing code...
 
   const handleViewStudent = (id) => {
     navigate(`/student/${id}`);
@@ -111,52 +102,55 @@ const StudentManagement = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleSubmitStudent = (e) => {
+  const handleSubmitStudent = async (e) => {
     e.preventDefault();
-    // Here you would typically submit the form data to your backend
-    console.log("Submitting student data:", {
-      studentId,
-      firstName,
-      lastName,
-      dateOfBirth,
-      gender,
-      homeAddressLine1,
-      homeAddressLine2,
-      city,
-      workplaceAddressLine1,
-      workplaceAddressLine2,
-      workplaceCity,
-      contactNumber,
-      guardianContactNumber,
-      employer,
-      trainer,
-      remarks,
-    });
-
-    // Close the dialog
+    const formatTime = (time) => (time ? `${time}:00` : null);
+    const payload = {
+      first_name: firstName,
+      last_name: lastName || null,
+      dob: dob ? new Date(dob).toISOString() : null, // keep as string (YYYY-MM-DD)
+      gender: gender || null,
+      address_line1: addressLine1 || null,
+      address_line2: addressLine2 || null,
+      city: city || null,
+      contact_number: contactNumber || null,
+      contact_number_guardian: contactNumberGuardian || null,
+      supervisor_id: supervisorId ? Number(supervisorId) : null,
+      remarks: remarks || null,
+      home_long: homeLong ? parseFloat(homeLong) : null,
+      home_lat: homeLat ? parseFloat(homeLat) : null,
+      employer_id: employerId ? Number(employerId) : null,
+      check_in_time: formatTime(checkInTime), // append :00 if present
+      check_out_time: formatTime(checkOutTime), // append :00 if present
+    };
+    try {
+      await createStudent(payload);
+      // Optionally, refresh data here if needed
+    } catch (err) {
+      // Optionally, handle error (show toast, etc.)
+      console.error("Failed to create student", err);
+    }
     setIsAddDialogOpen(false);
-
-    // Reset form
     resetForm();
   };
 
   const resetForm = () => {
-    setStudentId("");
     setFirstName("");
     setLastName("");
-    setDateOfBirth("");
+    setDob("");
     setGender("");
-    setHomeAddressLine1("");
-    setHomeAddressLine2("");
+    setAddressLine1("");
+    setAddressLine2("");
     setCity("");
-    setWorkplaceAddressLine1("");
-    setWorkplaceAddressLine2("");
-    setWorkplaceCity("");
     setContactNumber("");
-    setGuardianContactNumber("");
-    setEmployer("");
-    setTrainer("");
+    setContactNumberGuardian("");
+    setSupervisorId(undefined);
     setRemarks("");
+    setHomeLong("");
+    setHomeLat("");
+    setEmployerId(undefined);
+    setCheckInTime("");
+    setCheckOutTime("");
   };
 
   // Filter and sort managementData by search query and student_id
@@ -327,22 +321,6 @@ const StudentManagement = () => {
 
           <form onSubmit={handleSubmitStudent} className="mt-6">
             <div className="space-y-6">
-              {/* ID */}
-              <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
-                <Label
-                  htmlFor="studentId"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  ID
-                </Label>
-                <Input
-                  id="studentId"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  className="mt-1.5 bg-white/80"
-                />
-              </div>
-
               {/* Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
@@ -379,16 +357,16 @@ const StudentManagement = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
-                    htmlFor="dateOfBirth"
+                    htmlFor="dob"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Date of birth (YYYY/MM/DD)
+                    Date of birth (YYYY-MM-DD)
                   </Label>
                   <Input
-                    id="dateOfBirth"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    placeholder="YYYY/MM/DD"
+                    id="dob"
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
                 </div>
@@ -422,29 +400,29 @@ const StudentManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label
-                      htmlFor="homeAddressLine1"
+                      htmlFor="addressLine1"
                       className="text-xs text-gray-500"
                     >
                       Address Line 1
                     </Label>
                     <Input
-                      id="homeAddressLine1"
-                      value={homeAddressLine1}
-                      onChange={(e) => setHomeAddressLine1(e.target.value)}
+                      id="addressLine1"
+                      value={addressLine1}
+                      onChange={(e) => setAddressLine1(e.target.value)}
                       className="mt-1.5 bg-white/80"
                     />
                   </div>
                   <div>
                     <Label
-                      htmlFor="homeAddressLine2"
+                      htmlFor="addressLine2"
                       className="text-xs text-gray-500"
                     >
                       Address Line 2
                     </Label>
                     <Input
-                      id="homeAddressLine2"
-                      value={homeAddressLine2}
-                      onChange={(e) => setHomeAddressLine2(e.target.value)}
+                      id="addressLine2"
+                      value={addressLine2}
+                      onChange={(e) => setAddressLine2(e.target.value)}
                       className="mt-1.5 bg-white/80"
                     />
                   </div>
@@ -462,54 +440,39 @@ const StudentManagement = () => {
                 </div>
               </div>
 
-              {/* Workplace address */}
-              <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  Workplace Address
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="workplaceAddressLine1"
-                      className="text-xs text-gray-500"
-                    >
-                      Address Line 1
-                    </Label>
-                    <Input
-                      id="workplaceAddressLine1"
-                      value={workplaceAddressLine1}
-                      onChange={(e) => setWorkplaceAddressLine1(e.target.value)}
-                      className="mt-1.5 bg-white/80"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="workplaceAddressLine2"
-                      className="text-xs text-gray-500"
-                    >
-                      Address Line 2
-                    </Label>
-                    <Input
-                      id="workplaceAddressLine2"
-                      value={workplaceAddressLine2}
-                      onChange={(e) => setWorkplaceAddressLine2(e.target.value)}
-                      className="mt-1.5 bg-white/80"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="workplaceCity"
-                      className="text-xs text-gray-500"
-                    >
-                      City
-                    </Label>
-                    <Input
-                      id="workplaceCity"
-                      value={workplaceCity}
-                      onChange={(e) => setWorkplaceCity(e.target.value)}
-                      className="mt-1.5 bg-white/80"
-                    />
-                  </div>
+              {/* Home coordinates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
+                  <Label
+                    htmlFor="homeLat"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Home Latitude
+                  </Label>
+                  <Input
+                    id="homeLat"
+                    type="number"
+                    step="any"
+                    value={homeLat}
+                    onChange={(e) => setHomeLat(e.target.value)}
+                    className="mt-1.5 bg-white/80"
+                  />
+                </div>
+                <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
+                  <Label
+                    htmlFor="homeLong"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Home Longitude
+                  </Label>
+                  <Input
+                    id="homeLong"
+                    type="number"
+                    step="any"
+                    value={homeLong}
+                    onChange={(e) => setHomeLong(e.target.value)}
+                    className="mt-1.5 bg-white/80"
+                  />
                 </div>
               </div>
 
@@ -531,42 +494,40 @@ const StudentManagement = () => {
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
-                    htmlFor="guardianContactNumber"
+                    htmlFor="contactNumberGuardian"
                     className="text-sm font-medium text-gray-700"
                   >
                     Guardian Contact Number
                   </Label>
                   <Input
-                    id="guardianContactNumber"
-                    value={guardianContactNumber}
-                    onChange={(e) => setGuardianContactNumber(e.target.value)}
+                    id="contactNumberGuardian"
+                    value={contactNumberGuardian}
+                    onChange={(e) => setContactNumberGuardian(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
                 </div>
               </div>
 
-              {/* Employer and trainer */}
+              {/* Employer and supervisor */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
-                    htmlFor="employer"
+                    htmlFor="employerId"
                     className="text-sm font-medium text-gray-700"
                   >
                     Employer
                   </Label>
-                  <Select value={employer} onValueChange={setEmployer}>
-                    <SelectTrigger id="employer" className="mt-1.5 bg-white/80">
+                  <Select value={employerId} onValueChange={setEmployerId}>
+                    <SelectTrigger
+                      id="employerId"
+                      className="mt-1.5 bg-white/80"
+                    >
                       <SelectValue placeholder="Select employer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {employers.map((emp) => (
-                        <SelectItem key={emp.name} value={emp.name}>
+                      {employerOptions.map((emp) => (
+                        <SelectItem key={emp.id} value={String(emp.id)}>
                           {emp.name}
-                          {emp.contact && (
-                            <span className="ml-2 text-xs text-gray-400">
-                              ({emp.contact})
-                            </span>
-                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -574,24 +535,25 @@ const StudentManagement = () => {
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
-                    htmlFor="trainer"
+                    htmlFor="supervisorId"
                     className="text-sm font-medium text-gray-700"
                   >
                     Supervisor
                   </Label>
-                  <Select value={trainer} onValueChange={setTrainer}>
-                    <SelectTrigger id="trainer" className="mt-1.5 bg-white/80">
+                  <Select value={supervisorId} onValueChange={setSupervisorId}>
+                    <SelectTrigger
+                      id="supervisorId"
+                      className="mt-1.5 bg-white/80"
+                    >
                       <SelectValue placeholder="Select supervisor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {supervisors.map((sup) => (
-                        <SelectItem key={sup.name} value={sup.name}>
-                          {sup.name}
-                          {sup.contact && (
-                            <span className="ml-2 text-xs text-gray-400">
-                              ({sup.contact})
-                            </span>
-                          )}
+                      {supervisorOptions.map((sup) => (
+                        <SelectItem
+                          key={sup.supervisor_id}
+                          value={String(sup.supervisor_id)}
+                        >
+                          {sup.first_name} {sup.last_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -599,36 +561,54 @@ const StudentManagement = () => {
                 </div>
               </div>
 
-              {/* Remarks and image upload */}
+              {/* Check-in and check-out times */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
-                    htmlFor="remarks"
+                    htmlFor="checkInTime"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Remarks
+                    Check-in Time
                   </Label>
-                  <Textarea
-                    id="remarks"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    className="mt-1.5 bg-white/80 h-40"
+                  <Input
+                    id="checkInTime"
+                    type="time"
+                    value={checkInTime}
+                    onChange={(e) => setCheckInTime(e.target.value)}
+                    className="mt-1.5 bg-white/80"
                   />
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
-                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                    Profile Image
+                  <Label
+                    htmlFor="checkOutTime"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Check-out Time
                   </Label>
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-white/50 transition-colors duration-200">
-                    <Upload className="h-10 w-10 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">
-                      Click to upload image
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      PNG, JPG up to 5MB
-                    </p>
-                  </div>
+                  <Input
+                    id="checkOutTime"
+                    type="time"
+                    value={checkOutTime}
+                    onChange={(e) => setCheckOutTime(e.target.value)}
+                    className="mt-1.5 bg-white/80"
+                  />
                 </div>
+              </div>
+
+              {/* Remarks */}
+              <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
+                <Label
+                  htmlFor="remarks"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Remarks
+                </Label>
+                <Textarea
+                  id="remarks"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  className="mt-1.5 bg-white/80 h-40"
+                />
               </div>
 
               {/* Submit button */}
