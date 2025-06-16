@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Clock, Users, Smile, Frown, Meh } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useCardService } from "../api/getCard"; // Adjust path if needed
+import { useCardService } from "../api/getCard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
