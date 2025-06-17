@@ -2,8 +2,6 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "@/components/Logo";
 import {
-  User,
-  GraduationCap,
   LogOut,
   BriefcaseBusiness,
   LayoutDashboard,

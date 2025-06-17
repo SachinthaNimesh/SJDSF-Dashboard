@@ -1,10 +1,12 @@
 import { Configuration, RedirectRequest } from "@azure/msal-browser";
 
 // MSAL configuration
+const configs = (window as any).configs || {};
+
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || "",
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID}`,
+    clientId: configs.VITE_AZURE_CLIENT_ID || "",
+    authority: `https://login.microsoftonline.com/${configs.VITE_AZURE_TENANT_ID}`,
     redirectUri: window.location.origin,
     navigateToLoginRequestUrl: true,
   },

@@ -27,14 +27,14 @@ export interface TraineeProfileResponse {
   recent_moods: Mood[];
   recent_attendance: AttendanceRecord[];
 }
-
+const configs = (window as any).configs || {};
 export async function getTraineeProfile(studentId: number): Promise<TraineeProfileResponse> {
   const response = await axios.get<TraineeProfileResponse>(
     `${API_URL}/trainee-profile`,
     {
       headers: {
         'accept': 'application/json',
-        'api-key': import.meta.env.VITE_API_KEY,
+        'api-key': configs.VITE_API_KEY,
         'student-id': studentId.toString(),
       },
     }

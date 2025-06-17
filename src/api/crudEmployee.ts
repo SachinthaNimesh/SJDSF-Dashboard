@@ -21,9 +21,9 @@ export interface Student {
     check_in_time: string;
     check_out_time: string;
 }
-
+const configs = (window as any).configs || {};
 const API_KEY =
-    import.meta.env.VITE_API_KEY ||
+    configs.VITE_API_KEY ||
     (typeof process !== "undefined" ? process.env.API_KEY : undefined);
 
 export function useStudentService() {

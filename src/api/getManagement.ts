@@ -10,7 +10,7 @@ export interface StudentEmployerSupervisor {
     supervisor_last_name: string | null;
     supervisor_contact_number: string | null;
 }
-
+const configs = (window as any).configs || {};
 export async function getManagementTable(): Promise<StudentEmployerSupervisor[]> {
 
     const response = await axios.get<StudentEmployerSupervisor[]>(
@@ -18,7 +18,7 @@ export async function getManagementTable(): Promise<StudentEmployerSupervisor[]>
         {
             headers: {
                 "accept": "application/json",
-                "api-key": import.meta.env.VITE_API_KEY,
+                "api-key": configs.VITE_API_KEY,
             }
         }
     );

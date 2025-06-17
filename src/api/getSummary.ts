@@ -16,10 +16,10 @@ export interface EmployeeSummary {
     remarks: string;
     moods: Mood[];
 }
-
+const configs = (window as any).configs || {};
 // Use import.meta.env for Vite or process.env for Node.js
 const API_KEY =
-  import.meta.env.VITE_API_KEY ||
+  configs.VITE_API_KEY ||
   (typeof process !== "undefined" ? process.env.API_KEY : undefined);
 
 export async function getEmployeeSummary(studentId: number): Promise<EmployeeSummary> {
