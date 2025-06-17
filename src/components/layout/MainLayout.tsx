@@ -1,8 +1,15 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
-import { User, GraduationCap, LogOut } from "lucide-react";
+import {
+  User,
+  GraduationCap,
+  LogOut,
+  BriefcaseBusiness,
+  LayoutDashboard,
+  Contact,
+  Factory,
+} from "lucide-react";
 import { useMsal } from "@azure/msal-react";
 
 interface MainLayoutProps {
@@ -22,7 +29,7 @@ function Sidebar({ active = "dashboard" }) {
             : "text-gray-600 hover:bg-gray-100"
         }`}
       >
-        <User className="w-5 h-5" />
+        <LayoutDashboard className="w-5 h-5" />
         Dashboard
       </Link>
       <Link
@@ -33,8 +40,30 @@ function Sidebar({ active = "dashboard" }) {
             : "text-gray-600 hover:bg-gray-100"
         }`}
       >
-        <GraduationCap className="w-5 h-5" />
+        <Contact className="w-5 h-5" />
         Employee Management
+      </Link>
+      <Link
+        to="#"
+        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium text-sm ${
+          location.pathname === "#"
+            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        <Factory className="w-5 h-5" />
+        Employer Management
+      </Link>
+      <Link
+        to="#"
+        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium text-sm ${
+          location.pathname === "#"
+            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        <BriefcaseBusiness className="w-5 h-5" />
+        Supervisor Management
       </Link>
     </nav>
   );
