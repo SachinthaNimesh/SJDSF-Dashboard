@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config/configs";
+import  {appConfig}  from "../config/configs";
 
 export interface Attendance {
     check_in_date_time: string;
@@ -19,7 +20,7 @@ export interface EmployeeSummary {
 const configs = (window as any).configs || {};
 // Use import.meta.env for Vite or process.env for Node.js
 const API_KEY =
-  configs.VITE_API_KEY ||
+  appConfig.VITE_API_KEY ||
   (typeof process !== "undefined" ? process.env.API_KEY : undefined);
 
 export async function getEmployeeSummary(studentId: number): Promise<EmployeeSummary> {

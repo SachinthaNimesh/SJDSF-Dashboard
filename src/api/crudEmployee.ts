@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config/configs";
+import  {appConfig}  from "../config/configs";
 
 // Student type definition
 export interface Student {
@@ -21,9 +22,9 @@ export interface Student {
     check_in_time: string;
     check_out_time: string;
 }
-const configs = (window as any).configs || {};
+
 const API_KEY =
-    configs.VITE_API_KEY ||
+    appConfig.VITE_API_KEY ||
     (typeof process !== "undefined" ? process.env.API_KEY : undefined);
 
 export function useStudentService() {

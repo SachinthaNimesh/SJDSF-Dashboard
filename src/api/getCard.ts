@@ -1,10 +1,11 @@
 import axios from "axios";
 import { API_URL } from "../config/configs";
 import { Card } from "../types/card";
-const configs = (window as any).configs || {};
+import  {appConfig}  from "../config/configs";
+
 // Use import.meta.env for Vite or process.env for Node.js
 const API_KEY =
-  configs.VITE_API_KEY ||
+  appConfig.VITE_API_KEY ||
   (typeof process !== "undefined" ? process.env.API_KEY : undefined);
 
 export function useCardService() {

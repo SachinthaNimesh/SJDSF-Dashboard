@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { API_URL } from "../config/configs";
+import  {appConfig}  from "../config/configs";
+
 export interface StudentEmployerSupervisor {
     student_id: number;
     student_first_name: string;
@@ -18,7 +20,7 @@ export async function getManagementTable(): Promise<StudentEmployerSupervisor[]>
         {
             headers: {
                 "accept": "application/json",
-                "api-key": configs.VITE_API_KEY,
+                "api-key": appConfig.VITE_API_KEY,
             }
         }
     );
