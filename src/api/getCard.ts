@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL } from "../../config/configs";
+import { API_URL } from "../config/configs";
 import { Card } from "../types/card";
 const configs = (window as any).configs || {};
 // Use import.meta.env for Vite or process.env for Node.js

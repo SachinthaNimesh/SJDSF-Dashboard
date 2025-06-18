@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from "../../config/configs";
+import { API_URL } from "../config/configs";
 
 export interface StudentInfo {
   first_name: string;

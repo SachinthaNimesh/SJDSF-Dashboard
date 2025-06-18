@@ -10,5 +10,7 @@ declare global {
     }
 }
 
+console.log("Window Config:", window.config);
+
 // Example of exporting the config if needed
 export const appConfig = window.config;
