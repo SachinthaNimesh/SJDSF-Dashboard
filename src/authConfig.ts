@@ -1,8 +1,12 @@
 import { Configuration, RedirectRequest } from "@azure/msal-browser";
-import  {appConfig}  from "./config/configs";
-// MSAL configuration
+import { appConfig } from "./config/configs";
 
-console.log("App Config:", appConfig);
+// Debug logs to check appConfig values
+console.log("appConfig:", appConfig);
+console.log("VITE_AZURE_CLIENT_ID:", appConfig.VITE_AZURE_CLIENT_ID);
+console.log("VITE_AZURE_TENANT_ID:", appConfig.VITE_AZURE_TENANT_ID);
+
+// MSAL configuration
 
 export const msalConfig: Configuration = {
   auth: {
@@ -52,4 +56,4 @@ export const loginRequest: RedirectRequest = {
 // Add here the endpoints for MS Graph API services you'd like to use.
 export const graphConfig = {
   graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
-}; 
+};
