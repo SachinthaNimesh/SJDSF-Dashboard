@@ -158,7 +158,6 @@ const StudentDetail = () => {
 
             {/* Employee Profile */}
             <div className="flex flex-col md:flex-row items-center bg-gradient-to-r from-white via-blue-50 to-blue-100 rounded-2xl shadow-lg p-6 mb-8 gap-6">
-              {/* Removed image, replaced with smooth profile info layout */}
               <div className="flex-1 flex flex-col justify-center items-center md:items-start">
                 <h3 className="text-2xl font-bold text-gray-800 mb-1">
                   {employee.name}

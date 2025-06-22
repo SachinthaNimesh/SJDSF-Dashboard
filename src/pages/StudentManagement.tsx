@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Edit, UserCog, Upload, Plus } from "lucide-react";
+import { Search, Edit, UserCog, Upload, Plus, Key, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,7 @@ import {
 } from "@/api/getManagement";
 import { useStudentService } from "@/api/crudEmployee";
 import { useSupervisorEmployerService } from "@/api/getSupervisorEmployerId";
+import { getOTP } from "@/api/getOTP";
 
 const genders = ["Male", "Female", "Other"];
 
@@ -77,6 +78,15 @@ const StudentManagement = () => {
   const { getAllEmployerIDsAndNames, getAllSupervisorIDsAndNames } =
     useSupervisorEmployerService();
 
+  // OTP Dialog state
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [otpResult, setOtpResult] = useState<null | {
+    otp?: string;
+    [key: string]: any;
+  }>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
   useEffect(() => {
     setLoading(true);
     getManagementTable()
@@ -92,7 +102,6 @@ const StudentManagement = () => {
       .then(setSupervisorOptions)
       .catch(() => setSupervisorOptions([]));
   }, []);
-  // ...existing code...
 
   const handleViewStudent = (id) => {
     navigate(`/student/${id}`);
@@ -125,9 +134,11 @@ const StudentManagement = () => {
     };
     try {
       await createStudent(payload);
-      // Optionally, refresh data here if needed
+
+      // Refresh management table after adding a new student
+      const data = await getManagementTable();
+      setManagementData(Array.isArray(data) ? data : []);
     } catch (err) {
-      // Optionally, handle error (show toast, etc.)
       console.error("Failed to create student", err);
     }
     setIsAddDialogOpen(false);
@@ -165,6 +176,38 @@ const StudentManagement = () => {
       );
     })
     .sort((a, b) => a.student_id - b.student_id);
+
+  // Handler for OTP button
+  const handleOtpClick = async (studentId: string | number) => {
+    setOtpDialogOpen(true);
+    setOtpResult(null);
+    setOtpError(null);
+    setOtpLoading(true);
+    try {
+      const result = await getOTP(studentId);
+      setOtpResult(result);
+    } catch (err: any) {
+      setOtpError(
+        err?.response?.data?.message || err?.message || "Failed to generate OTP"
+      );
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Helper to format ISO date string to readable format
+  function formatDateTime(iso: string) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
@@ -289,11 +332,21 @@ const StudentManagement = () => {
                             >
                               <Edit className="h-5 w-5" />
                             </button>
+                            {/* Delete student button */}
                             <button
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                              title="Manage student"
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                              title="Delete student"
+                              // onClick handler can be implemented as needed
                             >
-                              <UserCog className="h-5 w-5" />
+                              <Trash className="h-5 w-5" />
+                            </button>
+                            {/* OTP Button with Key icon, green color */}
+                            <button
+                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                              title="Send OTP"
+                              onClick={() => handleOtpClick(item.student_id)}
+                            >
+                              <Key className="h-5 w-5" />
                             </button>
                           </div>
                         </TableCell>
@@ -620,6 +673,60 @@ const StudentManagement = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP Result Dialog */}
+      <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              <span className="flex items-center gap-2">
+                <Key className="h-6 w-6 text-green-600" />
+                OTP Details
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          {otpLoading ? (
+            <div className="text-center py-8">Generating OTP...</div>
+          ) : otpError ? (
+            <div className="text-red-600 py-4">{otpError}</div>
+          ) : otpResult && (otpResult.otp_code || otpResult.otp) ? (
+            <div className="py-4 flex justify-center">
+              <div className="w-full max-w-xs bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-xl shadow p-5 flex flex-col items-center space-y-4">
+                <div className="flex flex-col items-center">
+                  <span className="uppercase text-xs tracking-widest text-green-700 font-semibold mb-1">
+                    One Time Password
+                  </span>
+                  <span className="text-4xl font-mono font-bold text-green-700 tracking-widest bg-green-100 px-6 py-2 rounded-lg shadow-inner">
+                    {otpResult.otp_code || otpResult.otp}
+                  </span>
+                </div>
+                <div className="w-full flex flex-col gap-2 mt-2">
+                  {otpResult.student_id && (
+                    <div className="flex justify-between text-gray-700 text-sm">
+                      <span className="font-medium">Student ID:</span>
+                      <span>{otpResult.student_id}</span>
+                    </div>
+                  )}
+                  {otpResult.expires_at && (
+                    <div className="flex justify-between text-gray-700 text-sm">
+                      <span className="font-medium">Expires At:</span>
+                      <span>{formatDateTime(otpResult.expires_at)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : otpResult ? (
+            <div className="py-4">
+              <div className="text-gray-700 text-sm">
+                {JSON.stringify(otpResult)}
+              </div>
+            </div>
+          ) : (
+            <div className="text-gray-500 py-4">No OTP data.</div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -1,6 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { LogIn } from "lucide-react";
+
+const MicrosoftLogo = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    className="mr-3"
+    aria-hidden="true"
+  >
+    <rect x="2" y="2" width="9" height="9" fill="#F35325" />
+    <rect x="13" y="2" width="9" height="9" fill="#81BC06" />
+    <rect x="2" y="13" width="9" height="9" fill="#05A6F0" />
+    <rect x="13" y="13" width="9" height="9" fill="#FFBA08" />
+  </svg>
+);
 
 const SignInButton = () => {
   const navigate = useNavigate();
@@ -12,10 +26,14 @@ const SignInButton = () => {
   return (
     <Button
       onClick={handleSignIn}
-      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 rounded-md text-lg font-medium transition-colors duration-200 shadow-md hover:shadow-lg flex items-center"
+      className="flex items-center justify-center bg-white border border-gray-300 hover:border-blue-600 text-gray-800 px-8 py-3 rounded-md text-lg font-semibold transition-colors duration-200 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+      style={{
+        minWidth: 260,
+        boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+      }}
     >
-      <LogIn className="mr-2 h-5 w-5" />
-      Sign In
+      <MicrosoftLogo />
+      <span className="ml-1">Sign in with Microsoft</span>
     </Button>
   );
 };
