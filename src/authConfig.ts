@@ -1,19 +1,8 @@
 import { Configuration, RedirectRequest } from "@azure/msal-browser";
 import { appConfig } from "./config/configs";
 
-// --- Microsoft Sign-In Configuration ---
-// Log appConfig for debugging
-console.log("[MSAL] Loaded appConfig:", appConfig);
+// MSAL configuration
 
-// Check for required Microsoft App registration values
-if (!appConfig.VITE_AZURE_CLIENT_ID) {
-  console.error("[MSAL] Missing VITE_AZURE_CLIENT_ID in appConfig. Microsoft sign-in will not work.");
-}
-if (!appConfig.VITE_AZURE_TENANT_ID) {
-  console.error("[MSAL] Missing VITE_AZURE_TENANT_ID in appConfig. Microsoft sign-in will not work.");
-}
-
-// MSAL configuration for Microsoft Account sign-in
 export const msalConfig: Configuration = {
   auth: {
     clientId: appConfig.VITE_AZURE_CLIENT_ID || "",
@@ -22,19 +11,30 @@ export const msalConfig: Configuration = {
     navigateToLoginRequestUrl: true,
   },
   cache: {
-    cacheLocation: "sessionStorage", // Use sessionStorage for security
+    cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false,
   },
   system: {
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {
-        if (containsPii) return;
+        if (containsPii) {
+          return;
+        }
         switch (level) {
-          case 0: console.error("[MSAL]", message); return;
-          case 1: console.warn("[MSAL]", message); return;
-          case 2: console.info("[MSAL]", message); return;
-          case 3: console.debug("[MSAL]", message); return;
-          default: return;
+          case 0:
+            console.error(message);
+            return;
+          case 1:
+            console.warn(message);
+            return;
+          case 2:
+            console.info(message);
+            return;
+          case 3:
+            console.debug(message);
+            return;
+          default:
+            return;
         }
       },
       piiLoggingEnabled: false,
@@ -43,12 +43,12 @@ export const msalConfig: Configuration = {
   },
 };
 
-// Scopes for Microsoft Identity Platform endpoints (Microsoft Graph)
+// Add here scopes for id token to be used at MS Identity Platform endpoints.
 export const loginRequest: RedirectRequest = {
   scopes: ["User.Read", "profile", "email", "openid"],
 };
 
-// Microsoft Graph API endpoints
+// Add here the endpoints for MS Graph API services you'd like to use.
 export const graphConfig = {
   graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
 };
