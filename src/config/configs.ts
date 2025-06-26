@@ -4,9 +4,9 @@ export const API_URL =
 declare global {
   interface Window {
     config: {
-      VITE_AZURE_TENANT_ID: string;
-      VITE_AZURE_CLIENT_ID: string;
       VITE_API_KEY: string;
+      VITE_AZURE_CLIENT_ID: string;
+      VITE_AZURE_TENANT_ID: string;
     };
   }
 }
