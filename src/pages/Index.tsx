@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -13,37 +14,61 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
-import { useMsal } from "@azure/msal-react";
-import { loginRequest } from "../authConfig"; // Adjust path if needed
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { instance, accounts, inProgress } = useMsal();
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Try to get user info from cookie, then endpoint if not found
   useEffect(() => {
-    if (accounts.length > 0) {
+    // Try cookie first (short-lived after login)
+    const cookieUser = (() => {
+      const encoded = Cookies.get("userinfo");
+      if (encoded) {
+        try {
+          const info = JSON.parse(atob(encoded));
+          Cookies.remove("userinfo", { path: "/" });
+          return info;
+        } catch {
+          Cookies.remove("userinfo", { path: "/" });
+        }
+      }
+      return null;
+    })();
+    if (cookieUser) {
+      setUserInfo(cookieUser);
+      return;
+    }
+    // Fallback: try endpoint
+    fetch("/auth/userinfo")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setUserInfo(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    // If logged in, redirect to dashboard
+    if (userInfo) {
       navigate("/dashboard");
     }
-  }, [accounts, navigate]);
+  }, [userInfo, navigate]);
 
   const handleLogin = () => {
-    try {
-      setIsLoading(true);
-      instance.loginRedirect(loginRequest);
-    } catch (error) {
-      console.error("Login failed:", error);
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    window.location.href = "/auth/login";
+  };
+  const handleLogout = async () => {
+    // Optionally clear any local user info
+    setUserInfo(null);
+    const sessionHint = Cookies.get("session_hint");
+    window.location.href = `/auth/logout?session_hint=${sessionHint}`;
   };
 
-  const handleLogout = () => {
-    instance.logoutRedirect();
-  };
-
-  // Show loading state while authentication is in progress
-  if (inProgress !== "none") {
+  // Show loading state while waiting for login
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50">
         <div className="text-center">
@@ -59,10 +84,10 @@ const Index = () => {
       {/* Header with Sign In */}
       <header className="w-full py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-end">
-          {accounts.length > 0 ? (
+          {userInfo ? (
             <div className="flex items-center gap-4">
               <span className="text-gray-700">
-                Welcome {accounts[0].username}
+                Welcome {userInfo.name || userInfo.email || "User"}
               </span>
               <button
                 onClick={handleLogout}
