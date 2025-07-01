@@ -8,7 +8,6 @@ import {
   Contact,
   Factory,
 } from "lucide-react";
-import { useMsal } from "@azure/msal-react";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -69,11 +68,9 @@ function Sidebar({ active = "dashboard" }) {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
-  const { accounts, instance } = useMsal();
-  const user = accounts[0];
 
   const handleLogout = () => {
-    instance.logoutPopup();
+    window.location.href = "/";
   };
 
   return (
@@ -94,17 +91,11 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {user?.name?.[0]?.toUpperCase() || "U"}
-                  </span>
+                  <span className="text-sm font-medium text-white">U</span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.name || "User"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {user?.username || "user@example.com"}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">User</p>
+                  <p className="text-xs text-gray-500">user@example.com</p>
                 </div>
               </div>
               <button
