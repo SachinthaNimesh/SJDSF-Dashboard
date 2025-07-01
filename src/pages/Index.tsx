@@ -9,71 +9,113 @@ import {
   LogIn,
   Globe,
   Facebook,
-  BarChart3,
-  Shield,
-  Mail,
-  Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
+console.log("Index page loaded");
 const Index = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  // Try to get user info from cookie, then endpoint if not found
   useEffect(() => {
-    // Try cookie first (short-lived after login)
-    const cookieUser = (() => {
-      const encoded = Cookies.get("userinfo");
-      if (encoded) {
-        try {
-          const info = JSON.parse(atob(encoded));
+    const initializeAuth = () => {
+      try {
+        // Check if user info cookie exists (from fresh login)
+        const userInfoCookie = Cookies.get("userinfo");
+
+        if (userInfoCookie && !sessionStorage.getItem("userInfo")) {
+          // Fresh login - decode cookie and store user info
+          const userInfo = JSON.parse(atob(userInfoCookie));
+          sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+          // Clear the cookie as recommended
           Cookies.remove("userinfo", { path: "/" });
-          return info;
-        } catch {
-          Cookies.remove("userinfo", { path: "/" });
+
+          setSignedIn(true);
+          setUser(userInfo);
+          console.log("User signed in:", userInfo);
         }
+        // Check if user info exists in session storage (returning user)
+        else if (sessionStorage.getItem("userInfo")) {
+          const userInfo = JSON.parse(sessionStorage.getItem("userInfo")!);
+          setSignedIn(true);
+          setUser(userInfo);
+          console.log("User restored from session:", userInfo);
+        }
+        // No authentication found
+        else {
+          console.log("User is not signed in");
+          setSignedIn(false);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error processing authentication:", error);
+        // Clear potentially corrupted data
+        sessionStorage.removeItem("userInfo");
+        Cookies.remove("userinfo", { path: "/" });
+        setSignedIn(false);
+        setUser(null);
       }
-      return null;
-    })();
-    if (cookieUser) {
-      setUserInfo(cookieUser);
-      return;
-    }
-    // Fallback: try endpoint
-    fetch("/auth/userinfo")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setUserInfo(data);
-      });
+
+      setIsAuthLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   useEffect(() => {
-    // If logged in, redirect to dashboard
-    if (userInfo) {
-      navigate("/dashboard");
+    // Handle errors from Managed Authentication
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorCode = urlParams.get("code");
+    const errorMessage = urlParams.get("message");
+
+    if (errorCode) {
+      toast.error(
+        <>
+          <p className="text-[16px] font-bold text-slate-800">
+            Something went wrong!
+          </p>
+          <p className="text-[13px] text-slate-400 mt-1">
+            Error Code: {errorCode}
+            <br />
+            Error Description: {errorMessage}
+          </p>
+        </>
+      );
+
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [userInfo, navigate]);
+  }, []);
 
   const handleLogin = () => {
     setIsLoading(true);
     window.location.href = "/auth/login";
   };
-  const handleLogout = async () => {
-    // Optionally clear any local user info
-    setUserInfo(null);
+
+  const handleLogout = () => {
+    // Clear stored user info
+    sessionStorage.removeItem("userInfo");
+    setSignedIn(false);
+    setUser(null);
+
+    // Redirect to Choreo logout
     const sessionHint = Cookies.get("session_hint");
-    window.location.href = `/auth/logout?session_hint=${sessionHint}`;
+    window.location.href = `/auth/logout${
+      sessionHint ? `?session_hint=${sessionHint}` : ""
+    }`;
   };
 
-  // Show loading state while waiting for login
-  if (isLoading) {
+  // Show loading state while checking authentication
+  if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Signing in...</p>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
         </div>
       </div>
     );
@@ -84,10 +126,11 @@ const Index = () => {
       {/* Header with Sign In */}
       <header className="w-full py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-end">
-          {userInfo ? (
+          {signedIn ? (
             <div className="flex items-center gap-4">
               <span className="text-gray-700">
-                Welcome {userInfo.name || userInfo.email || "User"}
+                Welcome{" "}
+                {user?.name || user?.given_name || user?.email || "User"}
               </span>
               <button
                 onClick={handleLogout}
@@ -123,10 +166,6 @@ const Index = () => {
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Welcome
             </h1>
-            {/* <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A comprehensive platform for managing and tracking employee
-              information and performance.
-            </p> */}
           </div>
 
           {/* Features Grid */}
