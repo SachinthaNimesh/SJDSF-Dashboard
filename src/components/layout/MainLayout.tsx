@@ -71,6 +71,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const [user, setUser] = useState<{
     first_name?: string;
+    last_name?: string;
     email?: string;
   } | null>(null);
 
@@ -127,7 +128,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 <div>
                   <p className="text-sm font-medium text-gray-900">
                     {user?.first_name && user.first_name.trim().length > 0
-                      ? user.first_name
+                      ? user.first_name +
+                        (user?.last_name ? ` ${user.last_name}` : "")
                       : user?.email || "User"}
                   </p>
                   <p className="text-xs text-gray-500">
