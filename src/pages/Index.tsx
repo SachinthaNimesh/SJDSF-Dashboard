@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FaMicrosoft } from "react-icons/fa";
 console.log("Index page loaded");
 const Index = () => {
   const navigate = useNavigate();
@@ -148,10 +149,16 @@ const Index = () => {
             <button
               onClick={handleLogin}
               disabled={isLoading}
-              className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white font-bold text-lg shadow-xl hover:from-blue-800 hover:to-purple-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-[#2F2F2F] hover:bg-[#1a1a1a] text-white font-bold text-lg shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#5E5E5E] disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(90deg, #2F2F2F 0%, #0078D4 100%)",
+              }}
             >
-              <LogIn className="mr-3 w-6 h-6" />
-              {isLoading ? "Signing in..." : "Sign In"}
+              <FaMicrosoft
+                className="mr-3 w-6 h-6"
+                style={{ color: "#F25022" }}
+              />
+              {isLoading ? "Signing in..." : "Login with Microsoft"}
             </button>
           )}
         </div>

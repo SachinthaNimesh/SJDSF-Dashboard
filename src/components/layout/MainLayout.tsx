@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "@/components/Logo";
+import Cookies from "js-cookie";
 import {
   LogOut,
   BriefcaseBusiness,
@@ -68,7 +69,31 @@ function Sidebar({ active = "dashboard" }) {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(
+    null
+  );
 
+  useEffect(() => {
+    let userInfo = null;
+    const sessionUser = sessionStorage.getItem("UserInfo");
+    if (sessionUser) {
+      try {
+        userInfo = JSON.parse(sessionUser);
+      } catch {
+        userInfo = null;
+      }
+    } else {
+      const userInfoCookie = Cookies.get("userinfo");
+      if (userInfoCookie) {
+        try {
+          userInfo = JSON.parse(atob(userInfoCookie));
+        } catch {
+          userInfo = null;
+        }
+      }
+    }
+    setUser(userInfo);
+  }, []);
   const handleLogout = () => {
     window.location.href = "/";
   };
@@ -91,11 +116,19 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">U</span>
+                  <span className="text-sm font-medium text-white">
+                    {user?.name?.[0]?.toUpperCase() ||
+                      user?.email?.[0]?.toUpperCase() ||
+                      "U"}
+                  </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">User</p>
-                  <p className="text-xs text-gray-500">user@example.com</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name || user?.email || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.email || "user@example.com"}
+                  </p>
                 </div>
               </div>
               <button
