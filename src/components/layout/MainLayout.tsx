@@ -69,9 +69,10 @@ function Sidebar({ active = "dashboard" }) {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(
-    null
-  );
+  const [user, setUser] = useState<{
+    first_name?: string;
+    email?: string;
+  } | null>(null);
 
   useEffect(() => {
     let userInfo = null;
@@ -94,6 +95,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     }
     setUser(userInfo);
   }, []);
+  console.log("User info:", user);
   const handleLogout = () => {
     window.location.href = "/";
   };
@@ -117,14 +119,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
-                    {user?.name?.[0]?.toUpperCase() ||
+                    {user?.first_name?.[0]?.toUpperCase() ||
                       user?.email?.[0]?.toUpperCase() ||
                       "U"}
                   </span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {user?.name || user?.email || "User"}
+                    {user?.first_name && user.first_name.trim().length > 0
+                      ? user.first_name
+                      : user?.email || "User"}
                   </p>
                   <p className="text-xs text-gray-500">
                     {user?.email || "user@example.com"}

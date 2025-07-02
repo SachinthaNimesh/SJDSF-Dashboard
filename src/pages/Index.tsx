@@ -150,14 +150,8 @@ const Index = () => {
               onClick={handleLogin}
               disabled={isLoading}
               className="inline-flex items-center px-6 py-3 rounded-xl bg-[#2F2F2F] hover:bg-[#1a1a1a] text-white font-bold text-lg shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#5E5E5E] disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{
-                background: "linear-gradient(90deg, #2F2F2F 0%, #0078D4 100%)",
-              }}
             >
-              <FaMicrosoft
-                className="mr-3 w-6 h-6"
-                style={{ color: "#F25022" }}
-              />
+              <FaMicrosoft className="mr-3 w-6 h-6" />
               {isLoading ? "Signing in..." : "Login with Microsoft"}
             </button>
           )}

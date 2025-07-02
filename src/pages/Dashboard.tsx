@@ -82,6 +82,13 @@ const Dashboard = () => {
     (emp) => getStatusForToday(emp).status === "In"
   ).length;
 
+  // Emotion counts
+  const happyCount = employees.filter((emp) => emp.emotion === "happy").length;
+  const neutralCount = employees.filter(
+    (emp) => emp.emotion === "neutral"
+  ).length;
+  const sadCount = employees.filter((emp) => emp.emotion === "sad").length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
@@ -139,11 +146,19 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      Happy Employees
+                      Mood Overview
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900 mt-1">
-                      {happyEmployees}
-                    </p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <span className="flex items-center gap-1 text-yellow-600 font-semibold text-lg">
+                        <Smile className="w-5 h-5" /> {happyCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-blue-600 font-semibold text-lg">
+                        <Meh className="w-5 h-5" /> {neutralCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-red-600 font-semibold text-lg">
+                        <Frown className="w-5 h-5" /> {sadCount}
+                      </span>
+                    </div>
                   </div>
                   <div className="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg">
                     <Smile className="w-6 h-6 text-white" />
