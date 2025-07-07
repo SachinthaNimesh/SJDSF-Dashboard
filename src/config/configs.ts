@@ -1,6 +1,6 @@
-export const API_URL =
-  "/choreo-apis/employee-mgmt-system/student-mgmt-server/v1";
-
+export const API_URL = "/choreo-apis/sjdsf/server/v1.0";
+// ("/choreo-apis/employee-mgmt-system/student-mgmt-server/v1");
+// https://e4fabb2f-4692-4208-91a3-f373545b57ff-dev.e1-us-east-azure.st.choreoapis.dev/sjdsf/server/v1.0
 declare global {
   interface Window {
     config: {
