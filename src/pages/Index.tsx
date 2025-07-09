@@ -27,10 +27,10 @@ const Index = () => {
         // Check if user info cookie exists (from fresh login)
         const userInfoCookie = Cookies.get("userinfo");
 
-        if (userInfoCookie && !sessionStorage.getItem("userInfo")) {
+        if (userInfoCookie && !localStorage.getItem("userInfo")) {
           // Fresh login - decode cookie and store user info
           const userInfo = JSON.parse(atob(userInfoCookie));
-          sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+          localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
           // Clear the cookie as recommended
           Cookies.remove("userinfo", { path: "/" });
@@ -39,9 +39,9 @@ const Index = () => {
           setUser(userInfo);
           console.log("User signed in:", userInfo);
         }
-        // Check if user info exists in session storage (returning user)
-        else if (sessionStorage.getItem("userInfo")) {
-          const userInfo = JSON.parse(sessionStorage.getItem("userInfo")!);
+        // Check if user info exists in local storage (returning user)
+        else if (localStorage.getItem("userInfo")) {
+          const userInfo = JSON.parse(localStorage.getItem("userInfo")!);
           setSignedIn(true);
           setUser(userInfo);
           console.log("User restored from session:", userInfo);
@@ -55,7 +55,7 @@ const Index = () => {
       } catch (error) {
         console.error("Error processing authentication:", error);
         // Clear potentially corrupted data
-        sessionStorage.removeItem("userInfo");
+        localStorage.removeItem("userInfo");
         Cookies.remove("userinfo", { path: "/" });
         setSignedIn(false);
         setUser(null);

@@ -1,3 +1,4 @@
+// Remove this
 // Utility for authentication actions and user info management
 import Cookies from "js-cookie";
 

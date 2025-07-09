@@ -1,3 +1,5 @@
+// Remove this
+
 import { Configuration, RedirectRequest } from "@azure/msal-browser";
 import { appConfig } from "./config/configs";
 
