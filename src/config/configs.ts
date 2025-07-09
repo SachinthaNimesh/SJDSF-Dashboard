@@ -1,7 +1,6 @@
-export const API_URL =
-  "https://a01f05ac-d5db-4f40-967f-6a0f97a713d2-dev.e1-us-east-azure.preview-dv.choreoapis.dev/sjdsf/server/v1.0";
-// ("/choreo-apis/employee-mgmt-system/student-mgmt-server/v1");
-// https://e4fabb2f-4692-4208-91a3-f373545b57ff-dev.e1-us-east-azure.st.choreoapis.dev/sjdsf/server/v1.0
+export const API_URL = "/choreo-apis/employee-mgmt-system/server-docker/v1";
+// export const API_URL ="https://87e89eab-95e5-4c0f-8192-7ee0196e1581-dev.e1-us-east-azure.choreoapis.dev/employee-mgmt-system/server-docker/v1.0";
+
 declare global {
   interface Window {
     config: {
@@ -13,5 +12,4 @@ declare global {
   }
 }
 
-// Example of exporting the config if needed
 export const appConfig = window.config;
