@@ -103,7 +103,7 @@ const Index = () => {
 
   const handleLogout = () => {
     // Clear stored user info
-    sessionStorage.removeItem("userInfo");
+    localStorage.removeItem("userInfo");
     setSignedIn(false);
     setUser(null);
 
