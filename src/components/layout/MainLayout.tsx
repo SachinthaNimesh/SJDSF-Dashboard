@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Contact,
   Factory,
+  MessageSquareText,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -29,6 +30,17 @@ function Sidebar({ active = "dashboard" }) {
       >
         <LayoutDashboard className="w-5 h-5" />
         Dashboard
+      </Link>
+      <Link
+        to="/manager-feedback"
+        className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium text-sm ${
+          location.pathname === "/manager-feedback"
+            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        <MessageSquareText className="w-5 h-5" />
+        Manager Feedbacks
       </Link>
       <Link
         to="/student-management"

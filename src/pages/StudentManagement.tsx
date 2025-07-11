@@ -220,9 +220,6 @@ const StudentManagement = () => {
                 <h2 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
                   Employee Management
                 </h2>
-                <p className="text-gray-600 mt-1">
-                  Manage and track employee information
-                </p>
               </div>
               <Button
                 onClick={handleAddStudent}

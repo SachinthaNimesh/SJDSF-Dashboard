@@ -67,10 +67,9 @@ const Index = () => {
     initializeAuth();
   }, []);
   useEffect(() => {
-    if (signedIn) {
-      navigate("/dashboard");
-    }
-  }, [signedIn, navigate]);
+    // For development: always navigate to /dashboard
+    navigate("/dashboard");
+  }, [navigate]);
   useEffect(() => {
     // Handle errors from Managed Authentication
     const urlParams = new URLSearchParams(window.location.search);

@@ -1,17 +1,29 @@
-// Remove this
 // Utility for authentication actions and user info management
 import Cookies from "js-cookie";
 
+const isLocal = window.location.hostname === "localhost"; // temp
+
 export function login() {
+  if (isLocal) return; // Disable redirect in local dev
   window.location.href = "/auth/login";
 }
 
 export function logout() {
+  if (isLocal) return; // Disable redirect in local dev //temp
   const sessionHint = Cookies.get("session_hint");
   window.location.href = `/auth/logout?session_hint=${sessionHint}`;
 }
 
 export function getUserInfoFromCookie() {
+  if (isLocal) {
+    // temp from here to
+    // Return mock user info for local dev
+    return {
+      first_name: "Dev",
+      last_name: "User",
+      email: "devuser@example.com",
+    };
+  } // temp to here
   const encodedUserInfo = Cookies.get("userinfo");
   if (encodedUserInfo) {
     try {
@@ -27,6 +39,15 @@ export function getUserInfoFromCookie() {
 }
 
 export async function getUserInfoFromEndpoint() {
+  if (isLocal) {
+    // temp from here to
+    // Return mock user info for local dev
+    return {
+      first_name: "Dev",
+      last_name: "User",
+      email: "devuser@example.com",
+    };
+  } // temp to here
   try {
     const response = await fetch("/auth/userinfo");
     if (response.ok) {
