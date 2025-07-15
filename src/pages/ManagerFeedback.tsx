@@ -132,10 +132,10 @@ const ManagerFeedback: React.FC = () => {
             </h2>
 
             {/* Search Bar Section */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex">
+            <div className="flex flex-wrap md:flex-nowrap md:items-center gap-2 md:gap-4 mb-6 w-full">
+              <div className="flex h-[40px] flex-shrink-0">
                 <button
-                  className={`px-4 py-2 rounded-l-lg border border-gray-300 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 h-full rounded-l-lg border border-gray-300 text-sm font-medium transition-colors ${
                     searchType === "StudentID"
                       ? "bg-blue-600 text-white border-blue-600"
                       : "bg-white hover:bg-gray-100"
@@ -146,7 +146,7 @@ const ManagerFeedback: React.FC = () => {
                   Student ID
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-r-lg border border-gray-300 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 h-full rounded-r-lg border border-gray-300 text-sm font-medium transition-colors ${
                     searchType === "ManagerID"
                       ? "bg-blue-600 text-white border-blue-600"
                       : "bg-white hover:bg-gray-100"
@@ -157,13 +157,15 @@ const ManagerFeedback: React.FC = () => {
                   Manager ID
                 </button>
               </div>
-              <input
-                type="text"
-                className="pl-3 pr-4 py-2 rounded-lg border border-gray-300 bg-white/80 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 w-64"
-                placeholder={`Search by ${searchType}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <div className="flex-grow min-w-[180px]">
+                <input
+                  type="text"
+                  className="pl-3 pr-4 py-2 h-[40px] rounded-lg border border-gray-300 bg-white/80 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 w-full"
+                  placeholder={`Search by ${searchType}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Warning message if column not found */}
@@ -173,9 +175,9 @@ const ManagerFeedback: React.FC = () => {
               </div>
             )}
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100/50 overflow-x-auto mt-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100/50 overflow-x-auto mt-6 w-full">
               <table
-                className="min-w-full border-separate border-spacing-0"
+                className="min-w-[600px] md:min-w-full border-separate border-spacing-0"
                 border={1}
                 cellPadding={8}
                 cellSpacing={0}
