@@ -9,6 +9,7 @@ declare global {
       VITE_AZURE_CLIENT_ID: string;
       VITE_AZURE_TENANT_ID: string;
       apiUrl: string;
+      VITE_GOOGLE_SHEET_API_KEY: string;
     };
   }
 }

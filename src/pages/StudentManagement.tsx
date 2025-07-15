@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,7 @@ const StudentManagement = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Form states (updated)
   const [firstName, setFirstName] = useState("");
@@ -66,7 +68,8 @@ const StudentManagement = () => {
     StudentEmployerSupervisor[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const { createStudent } = useStudentService();
+  const { createStudent, updateStudent, deleteStudent, getStudentById } =
+    useStudentService();
 
   // Add state for dropdown data
   const [employerOptions, setEmployerOptions] = useState<
@@ -86,6 +89,17 @@ const StudentManagement = () => {
   }>(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
+
+  // Edit dialog state
+  const [editStudentId, setEditStudentId] = useState<number | null>(null);
+
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteStudentId, setDeleteStudentId] = useState<number | null>(null);
+
+  // Form validation state
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -108,11 +122,22 @@ const StudentManagement = () => {
   };
 
   const handleAddStudent = () => {
+    setIsEditMode(false);
+    setEditStudentId(null);
+    resetForm();
+    setFormErrors({}); // clear errors
     setIsAddDialogOpen(true);
   };
 
   const handleSubmitStudent = async (e) => {
     e.preventDefault();
+    setIsFormSubmitted(true); // mark form as submitted
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     const formatTime = (time) => (time ? `${time}:00` : null);
     const payload = {
       first_name: firstName,
@@ -133,15 +158,32 @@ const StudentManagement = () => {
       check_out_time: formatTime(checkOutTime), // append :00 if present
     };
     try {
-      await createStudent(payload);
+      if (isEditMode && editStudentId) {
+        // Update existing student
+        await updateStudent(editStudentId, payload);
+      } else {
+        // Create new student
+        await createStudent(payload);
+      }
 
-      // Refresh management table after adding a new student
+      // Refresh management table after adding/updating a student
       const data = await getManagementTable();
       setManagementData(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to create student", err);
+      console.error(
+        `Failed to ${isEditMode ? "update" : "create"} student`,
+        err
+      );
+      alert(
+        `Failed to ${
+          isEditMode ? "update" : "create"
+        } student. See console for details.`
+      );
     }
+    setIsFormSubmitted(false); // reset after successful submit
     setIsAddDialogOpen(false);
+    setIsEditMode(false);
+    setEditStudentId(null);
     resetForm();
   };
 
@@ -162,6 +204,7 @@ const StudentManagement = () => {
     setEmployerId(undefined);
     setCheckInTime("");
     setCheckOutTime("");
+    setIsFormSubmitted(false);
   };
 
   // Filter and sort managementData by search query and student_id
@@ -195,6 +238,98 @@ const StudentManagement = () => {
     }
   };
 
+  // Open edit dialog and populate form
+  const handleEditStudent = async (student: StudentEmployerSupervisor) => {
+    try {
+      // Fetch complete student data
+      const fullStudentData = await getStudentById(student.student_id);
+
+      setEditStudentId(student.student_id);
+      setIsEditMode(true);
+      setFormErrors({}); // clear errors
+
+      // Pre-populate all form fields with complete student data
+      setFirstName(fullStudentData.first_name || "");
+      setLastName(fullStudentData.last_name || "");
+      setDob(
+        fullStudentData.dob
+          ? new Date(fullStudentData.dob).toISOString().split("T")[0]
+          : ""
+      );
+      setGender(fullStudentData.gender || "");
+      setAddressLine1(fullStudentData.address_line1 || "");
+      setAddressLine2(fullStudentData.address_line2 || "");
+      setCity(fullStudentData.city || "");
+      setContactNumber(fullStudentData.contact_number || "");
+      setContactNumberGuardian(fullStudentData.contact_number_guardian || "");
+      setSupervisorId(
+        fullStudentData.supervisor_id
+          ? String(fullStudentData.supervisor_id)
+          : undefined
+      );
+      setRemarks(fullStudentData.remarks || "");
+      setHomeLong(
+        fullStudentData.home_long ? String(fullStudentData.home_long) : ""
+      );
+      setHomeLat(
+        fullStudentData.home_lat ? String(fullStudentData.home_lat) : ""
+      );
+      setEmployerId(
+        fullStudentData.employer_id
+          ? String(fullStudentData.employer_id)
+          : undefined
+      );
+      setCheckInTime(
+        fullStudentData.check_in_time
+          ? fullStudentData.check_in_time.substring(0, 5)
+          : ""
+      );
+      setCheckOutTime(
+        fullStudentData.check_out_time
+          ? fullStudentData.check_out_time.substring(0, 5)
+          : ""
+      );
+
+      setIsAddDialogOpen(true);
+    } catch (error) {
+      console.error("Error fetching student data for edit:", error);
+      alert("Failed to load student data for editing. Please try again.");
+    }
+  };
+
+  // Handle closing edit dialog
+  const handleCloseDialog = () => {
+    setIsAddDialogOpen(false);
+    setIsEditMode(false);
+    setEditStudentId(null);
+    resetForm();
+  };
+
+  // Open delete dialog
+  const handleDeleteStudent = (id: number) => {
+    setDeleteStudentId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirm delete
+  const handleConfirmDeleteStudent = async () => {
+    if (typeof deleteStudentId !== "number" || isNaN(deleteStudentId)) {
+      console.error("Invalid student ID for delete:", deleteStudentId);
+      return;
+    }
+    try {
+      await deleteStudent(deleteStudentId);
+      // Refresh table
+      const data = await getManagementTable();
+      setManagementData(Array.isArray(data) ? data : []);
+      setIsDeleteDialogOpen(false);
+      setDeleteStudentId(null);
+    } catch (err) {
+      console.error("Failed to delete student", err);
+      alert("Failed to delete student. See console for details.");
+    }
+  };
+
   // Helper to format ISO date string to readable format
   function formatDateTime(iso: string) {
     if (!iso) return "";
@@ -207,6 +342,100 @@ const StudentManagement = () => {
       minute: "2-digit",
       second: "2-digit",
     });
+  }
+  // Validate form inputs
+  function validateForm() {
+    const errors: { [key: string]: string } = {};
+
+    // First name required
+    if (!firstName.trim()) errors.firstName = "First name is required";
+
+    // DOB: valid date and at least 16 years old
+    if (!dob) {
+      errors.dob = "Date of birth is required";
+    } else {
+      const dobDate = new Date(dob);
+      const now = new Date();
+      const age = now.getFullYear() - dobDate.getFullYear();
+      const m = now.getMonth() - dobDate.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dobDate.getDate())) {
+        if (age - 1 < 16) errors.dob = "Employee must be at least 16 years old";
+      } else {
+        if (age < 16) errors.dob = "Employee must be at least 16 years old";
+      }
+      if (isNaN(dobDate.getTime())) errors.dob = "Invalid date of birth";
+    }
+
+    // Gender required
+    if (!gender) errors.gender = "Gender is required";
+
+    // Address line 1 required
+    if (!addressLine1.trim())
+      errors.addressLine1 = "Address Line 1 is required";
+
+    // City required
+    if (!city.trim()) errors.city = "City is required";
+
+    // Phone number validation
+    function validatePhone(number: string, label: string) {
+      // Remove spaces and dashes for validation
+      const cleaned = number.replace(/[\s-]/g, "");
+      if (!cleaned) return `${label} is required`;
+
+      // Local format: 07XXXXXXXX (Sri Lanka mobile)
+      if (cleaned.startsWith("0")) {
+        if (!/^07\d{8}$/.test(cleaned)) {
+          return `${label} must be a valid local mobile number (07XXXXXXXX)`;
+        }
+      }
+      // International format: +XXXXXXXXXXX (10-15 digits, no spaces/dashes)
+      else if (cleaned.startsWith("+")) {
+        if (!/^\+\d{10,15}$/.test(cleaned)) {
+          return `${label} must be a valid international number (+XXXXXXXXXXX, 10-15 digits)`;
+        }
+      }
+      // Invalid format
+      else {
+        return `${label} must start with 0 or +`;
+      }
+      return "";
+    }
+
+    const contactNumberError = validatePhone(
+      contactNumber.trim(),
+      "Contact number"
+    );
+    if (contactNumberError) errors.contactNumber = contactNumberError;
+
+    const guardianNumberError = validatePhone(
+      contactNumberGuardian.trim(),
+      "Guardian contact number"
+    );
+    if (guardianNumberError) errors.contactNumberGuardian = guardianNumberError;
+
+    // Supervisor required
+    if (!supervisorId) errors.supervisorId = "Supervisor is required";
+
+    // Employer required
+    if (!employerId) errors.employerId = "Employer is required";
+
+    // Longitude/Latitude validation (optional, only if provided)
+    if (
+      homeLong &&
+      (isNaN(Number(homeLong)) ||
+        Number(homeLong) < -180 ||
+        Number(homeLong) > 180)
+    ) {
+      errors.homeLong = "Longitude must be between -180 and 180";
+    }
+    if (
+      homeLat &&
+      (isNaN(Number(homeLat)) || Number(homeLat) < -90 || Number(homeLat) > 90)
+    ) {
+      errors.homeLat = "Latitude must be between -90 and 90";
+    }
+
+    return errors;
   }
 
   return (
@@ -323,17 +552,18 @@ const StudentManagement = () => {
                         <TableCell>
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => handleViewStudent(item.student_id)}
+                              onClick={() => handleEditStudent(item)}
                               className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                               title="Edit student"
                             >
                               <Edit className="h-5 w-5" />
                             </button>
-                            {/* Delete student button */}
                             <button
                               className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
                               title="Delete student"
-                              // onClick handler can be implemented as needed
+                              onClick={() =>
+                                handleDeleteStudent(item.student_id)
+                              }
                             >
                               <Trash className="h-5 w-5" />
                             </button>
@@ -357,15 +587,17 @@ const StudentManagement = () => {
         </main>
       </div>
 
-      {/* Add Student Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      {/* Add/Edit Student Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Add New Employee
+              {isEditMode ? "Edit Employee" : "Add New Employee"}
             </DialogTitle>
             <p className="text-gray-500 text-sm mt-1">
-              Fill in the details to add a new employee to the system
+              {isEditMode
+                ? "Update the employee details below"
+                : "Fill in the details to add a new employee to the system"}
             </p>
           </DialogHeader>
 
@@ -378,7 +610,7 @@ const StudentManagement = () => {
                     htmlFor="firstName"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Firstname
+                    Firstname <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="firstName"
@@ -386,6 +618,11 @@ const StudentManagement = () => {
                     onChange={(e) => setFirstName(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {isFormSubmitted && formErrors.firstName && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.firstName}
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
@@ -410,7 +647,8 @@ const StudentManagement = () => {
                     htmlFor="dob"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Date of birth (YYYY-MM-DD)
+                    Date of birth (YYYY-MM-DD){" "}
+                    <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="dob"
@@ -419,13 +657,18 @@ const StudentManagement = () => {
                     onChange={(e) => setDob(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {formErrors.dob && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.dob}
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
                     htmlFor="gender"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Gender
+                    Gender <span className="text-red-600">*</span>
                   </Label>
                   <Select value={gender} onValueChange={setGender}>
                     <SelectTrigger id="gender" className="mt-1.5 bg-white/80">
@@ -439,6 +682,11 @@ const StudentManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.gender && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.gender}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -453,7 +701,7 @@ const StudentManagement = () => {
                       htmlFor="addressLine1"
                       className="text-xs text-gray-500"
                     >
-                      Address Line 1
+                      Address Line 1 <span className="text-red-600">*</span>
                     </Label>
                     <Input
                       id="addressLine1"
@@ -461,6 +709,11 @@ const StudentManagement = () => {
                       onChange={(e) => setAddressLine1(e.target.value)}
                       className="mt-1.5 bg-white/80"
                     />
+                    {formErrors.addressLine1 && (
+                      <span className="text-red-600 text-xs">
+                        {formErrors.addressLine1}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <Label
@@ -478,7 +731,7 @@ const StudentManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="city" className="text-xs text-gray-500">
-                      City
+                      City <span className="text-red-600">*</span>
                     </Label>
                     <Input
                       id="city"
@@ -486,6 +739,11 @@ const StudentManagement = () => {
                       onChange={(e) => setCity(e.target.value)}
                       className="mt-1.5 bg-white/80"
                     />
+                    {formErrors.city && (
+                      <span className="text-red-600 text-xs">
+                        {formErrors.city}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -507,6 +765,11 @@ const StudentManagement = () => {
                     onChange={(e) => setHomeLat(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {formErrors.homeLat && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.homeLat}
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
@@ -523,6 +786,11 @@ const StudentManagement = () => {
                     onChange={(e) => setHomeLong(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {formErrors.homeLong && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.homeLong}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -533,7 +801,7 @@ const StudentManagement = () => {
                     htmlFor="contactNumber"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Contact Number
+                    Contact Number <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="contactNumber"
@@ -541,13 +809,19 @@ const StudentManagement = () => {
                     onChange={(e) => setContactNumber(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {formErrors.contactNumber && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.contactNumber}
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
                     htmlFor="contactNumberGuardian"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Guardian Contact Number
+                    Guardian Contact Number{" "}
+                    <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="contactNumberGuardian"
@@ -555,6 +829,11 @@ const StudentManagement = () => {
                     onChange={(e) => setContactNumberGuardian(e.target.value)}
                     className="mt-1.5 bg-white/80"
                   />
+                  {formErrors.contactNumberGuardian && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.contactNumberGuardian}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -565,7 +844,7 @@ const StudentManagement = () => {
                     htmlFor="employerId"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Employer
+                    Employer <span className="text-red-600">*</span>
                   </Label>
                   <Select value={employerId} onValueChange={setEmployerId}>
                     <SelectTrigger
@@ -582,13 +861,18 @@ const StudentManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.employerId && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.employerId}
+                    </span>
+                  )}
                 </div>
                 <div className="bg-white/50 p-4 rounded-xl border border-gray-100">
                   <Label
                     htmlFor="supervisorId"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Supervisor
+                    Supervisor <span className="text-red-600">*</span>
                   </Label>
                   <Select value={supervisorId} onValueChange={setSupervisorId}>
                     <SelectTrigger
@@ -608,6 +892,11 @@ const StudentManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.supervisorId && (
+                    <span className="text-red-600 text-xs">
+                      {formErrors.supervisorId}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -666,7 +955,7 @@ const StudentManagement = () => {
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 py-6 text-lg font-medium"
               >
-                Add Employee
+                {isEditMode ? "Update Employee" : "Add Employee"}
               </Button>
             </div>
           </form>
@@ -724,6 +1013,29 @@ const StudentManagement = () => {
           ) : (
             <div className="text-gray-500 py-4">No OTP data.</div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Employee</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            Are you sure you want to delete this employee?
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDeleteStudent}>
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

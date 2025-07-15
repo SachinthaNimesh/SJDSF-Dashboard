@@ -1,15 +1,24 @@
+import { appConfig } from "@/config/configs";
 import React, { useEffect, useState } from "react";
 
 type FeedbackResponse = {
   [key: string]: string;
 };
 
+const GOOGLE_SHEET_API_KEY =
+  import.meta.env.VITE_GOOGLE_SHEET_API_KEY ||
+  appConfig?.VITE_GOOGLE_SHEET_API_KEY ||
+  "";
 const SHEET_ID = "1LmvPIp-Ixdvur80OKFQ7Dm31QB1KpjOZDAstUWLkK-o";
-const API_KEY = "AIzaSyBdFrLQ2EqTynx8WBGk-mvEl8jFd2nnWtU";
 const RANGE = "Sheet1!A1:Z100";
 
 const fetchSheetData = async (): Promise<FeedbackResponse[]> => {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+  if (!GOOGLE_SHEET_API_KEY) {
+    throw new Error(
+      "Google Sheets API key is not configured. Please set VITE_GOOGLE_SHEET_API_KEY in your .env file."
+    );
+  }
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${GOOGLE_SHEET_API_KEY}`;
   console.log("Fetching Google Sheet data from URL:", url);
   const res = await fetch(url);
   console.log("Fetch response status:", res.status, res.statusText);
