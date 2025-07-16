@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  Users,
-  Clock,
-  Building2,
-  LogIn,
-  Globe,
-  Facebook,
-} from "lucide-react";
+import { Users, Clock, Building2, LogIn, Globe, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaMicrosoft } from "react-icons/fa";
@@ -67,8 +59,7 @@ const Index = () => {
     initializeAuth();
   }, []);
   useEffect(() => {
-    // For development: always navigate to /dashboard
-    navigate("/dashboard");
+    navigate("/");
   }, [navigate]);
   useEffect(() => {
     // Handle errors from Managed Authentication
