@@ -46,10 +46,10 @@ function Sidebar({ compact = false }) {
       match: "#",
     },
     {
-      to: "#",
+      to: "/supervisor-management",
       icon: <BriefcaseBusiness className="w-5 h-5" />,
       label: "Supervisor Management",
-      match: "#",
+      match: "/supervisor-management",
     },
   ];
 

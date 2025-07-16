@@ -12,6 +12,7 @@ import StudentManagement from "./pages/StudentManagement";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ManagerFeedback from "./pages/ManagerFeedback";
+import SupervisorManagement from "./pages/SupervisorManagement";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,16 @@ const App = () => (
               <ProtectedRoute>
                 <MainLayout>
                   <ManagerFeedback />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/supervisor-management"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <SupervisorManagement />
                 </MainLayout>
               </ProtectedRoute>
             }
