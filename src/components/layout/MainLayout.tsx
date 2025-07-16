@@ -9,8 +9,6 @@ import {
   Contact,
   Factory,
   MessageSquareText,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import React from "react";
 
@@ -59,25 +57,29 @@ function Sidebar({ compact = false }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
-    <nav className={`flex flex-col gap-2 py-4 px-2 relative`}>
+    <nav className={`flex flex-col gap-2 py-4 px-2 relative `}>
       {items.map((item, idx) => {
         const isActive = location.pathname === item.match;
         return (
           <div
             key={item.label}
-            className="relative"
+            className={`relative ${compact ? "flex justify-center" : ""}`}
             onMouseEnter={() => setHoveredIdx(idx)}
             onMouseLeave={() => setHoveredIdx(null)}
           >
             <Link
               to={item.to}
-              className={`flex items-center gap-2 py-4 rounded-lg font-medium text-sm transition-all duration-200
+              className={`flex items-center gap-2 rounded-lg font-medium text-sm transition-all duration-200
                 ${
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
                     : "text-gray-600 hover:bg-gray-100"
                 }
-                ${compact ? "justify-center" : "justify-start"}
+                ${
+                  compact
+                    ? "w-12 h-12 items-center justify-center" // square shape with rounded corners
+                    : "py-4 justify-start"
+                }
                 mx-1
               `}
             >
@@ -101,7 +103,7 @@ function Sidebar({ compact = false }) {
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
-  const location = useLocation();
+  // const location = useLocation();
   const [user, setUser] = useState<{
     first_name?: string;
     last_name?: string;
@@ -213,9 +215,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                     "U"}
                 </span>
               </div>
-              {sidebarCompact && (
-                <div className="w-full border-b border-gray-200 mb-2" />
-              )}
+              {sidebarCompact && <div className="w-full mt-auto" />}
             </div>
           )}
         </div>
