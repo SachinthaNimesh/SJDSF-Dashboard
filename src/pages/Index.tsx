@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
 import { Users, Clock, Building2, LogIn, Globe, Facebook } from "lucide-react";
@@ -46,9 +46,7 @@ const Index = () => {
         }
       } catch (error) {
         console.error("Error processing authentication:", error);
-        // Clear potentially corrupted data
-        localStorage.removeItem("userInfo");
-        Cookies.remove("userinfo", { path: "/" });
+        // Only log error, do not clear userInfo here
         setSignedIn(false);
         setUser(null);
       }
